@@ -44,6 +44,7 @@
 - Multi-role authentication (Platform Admin, Agency, Supplier, Traveler)
 - Platform Admin: Agency onboarding (basic)
 - Supplier Portal: Service creation & management
+- Purchase Order workflow (Agency → Supplier approval → Package creation)
 - Agency Portal: Package creation & booking management
 - Traveler Portal: Browse packages & create booking
 - Booking approval workflow
@@ -264,16 +265,51 @@
 
 ---
 
-### Week 5: Traveler Portal - Browse & Book (Mar 11-17, 2026)
+### Week 5: Purchase Orders & Traveler Portal (Mar 11-17, 2026)
 
-#### Backend Tasks:
+#### Backend Tasks - Purchase Orders:
+- [ ] Create purchase_orders and po_items tables
+- [ ] Create CQRS commands for PO creation (Agency)
+- [ ] Create CQRS queries for PO listing (Agency & Supplier)
+- [ ] Create CQRS commands for PO approval (Supplier)
+- [ ] Create CQRS commands for PO rejection (Supplier)
+- [ ] Implement PO validation logic
+- [ ] Create PO status workflow
+
+#### Backend Tasks - Traveler Portal:
 - [ ] Create CQRS queries for public package listing
 - [ ] Implement package search & filter (by type, price, date)
 - [ ] Create CQRS commands for booking creation
 - [ ] Implement booking validation (quota check)
 - [ ] Create traveler dashboard stats endpoint
 
-#### Frontend Tasks:
+#### Frontend Tasks - Purchase Orders (Agency):
+- [ ] Create PO list page
+  - Filter by status, supplier
+  - Search by PO code
+  - Status badges
+  - Create new PO button
+- [ ] Create PO form page
+  - Supplier selection
+  - Dynamic PO items (add/remove)
+  - Service selection from supplier catalog
+  - Auto-calculate totals
+- [ ] Create PO detail page
+  - PO information
+  - PO items table
+  - Create package button (if approved)
+
+#### Frontend Tasks - Purchase Orders (Supplier):
+- [ ] Create PO list page (Supplier view)
+  - Pending approvals section
+  - Filter by status
+  - Search by PO code or agency name
+- [ ] Create PO detail page (Supplier view)
+  - PO information
+  - PO items table
+  - Approve/reject buttons
+
+#### Frontend Tasks - Traveler Portal:
 - [ ] Create traveler layout
 - [ ] Create home page (featured packages)
 - [ ] Create package search/browse page
@@ -296,6 +332,9 @@
 - [ ] Create booking detail page
 
 #### Testing:
+- [ ] Test PO creation workflow (Agency)
+- [ ] Test PO approval/rejection workflow (Supplier)
+- [ ] Test package creation from approved PO
 - [ ] Test package browsing & search
 - [ ] Test package filtering
 - [ ] Test booking creation
@@ -307,6 +346,7 @@
 ### Week 6: Agency Portal - Booking Management (Mar 18-24, 2026)
 
 #### Backend Tasks:
+- [ ] Update package creation to support PO linking (approved_po_id)
 - [ ] Create CQRS queries for booking listing (with filters)
 - [ ] Create CQRS commands for booking approval
 - [ ] Create CQRS commands for booking rejection
@@ -315,6 +355,10 @@
 - [ ] Implement booking status workflow
 
 #### Frontend Tasks:
+- [ ] Update package form to support PO linking
+  - Pre-fill services from approved PO
+  - Display PO code if linked
+  - Allow adding additional services
 - [ ] Create booking list page
   - Filter by status, date, package
   - Search by booking reference or customer name
@@ -342,6 +386,7 @@
   - Confirmation dialog
 
 #### Testing:
+- [ ] Test package creation from PO vs direct catalog
 - [ ] Test booking listing & filtering
 - [ ] Test booking approval workflow
 - [ ] Test booking rejection workflow

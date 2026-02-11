@@ -170,6 +170,20 @@
   - Filter by status
   - Search by name
   - Sort by price, date
+- ✅ Purchase Order management
+  - View incoming POs from agencies
+  - List all POs (pending, approved, rejected)
+  - View PO details
+  - Filter by status
+  - Search by PO code or agency name
+  - Approve PO
+  - Reject PO (with reason)
+- ✅ PO approval workflow
+  - Review PO details
+  - Review PO items (services, quantities, prices)
+  - Approve with confirmation
+  - Reject with reason input
+  - Notify agency of decision
 
 #### API Endpoints:
 - POST /supplier/services
@@ -180,6 +194,10 @@
 - PATCH /supplier/services/{id}/publish
 - PATCH /supplier/services/{id}/unpublish
 - GET /supplier/dashboard/stats
+- GET /supplier/purchase-orders
+- GET /supplier/purchase-orders/{id}
+- PATCH /supplier/purchase-orders/{id}/approve
+- PATCH /supplier/purchase-orders/{id}/reject
 
 ---
 
@@ -198,8 +216,27 @@
   - Search by name
   - View service details
   - Price comparison
+- ✅ Purchase Order management
+  - Create new PO to supplier
+  - List all POs
+  - View PO details
+  - Filter by status (pending, approved, rejected)
+  - Filter by supplier
+  - Search by PO code
+  - Track PO status
+- ✅ PO creation workflow
+  - Select supplier
+  - Add multiple PO items (service, quantity, unit price)
+  - Auto-calculate item totals
+  - Auto-calculate PO total amount
+  - Submit for supplier approval
+- ✅ PO approval tracking
+  - View pending POs
+  - View approved POs
+  - View rejected POs (with reason)
+  - Create package from approved PO
 - ✅ Package management
-  - Create new package
+  - Create new package (from PO or direct from catalog)
   - List all packages
   - View package details
   - Edit package
@@ -208,10 +245,15 @@
   - Archive package
 - ✅ Package creation wizard (5 steps)
   - Step 1: Basic info (name, type, duration)
-  - Step 2: Select services from catalog
+  - Step 2: Select services (from PO or catalog)
   - Step 3: Pricing (base cost, markup, selling price)
   - Step 4: Departures (date, quota)
   - Step 5: Review & publish
+- ✅ Package creation from approved PO
+  - Pre-fill services from PO
+  - Link package to PO (approved_po_id)
+  - Allow adding additional services
+  - Display PO code in package details
 - ✅ Package types supported:
   - Umrah
   - Hajj
@@ -247,6 +289,9 @@
 
 #### API Endpoints:
 - GET /supplier-services (browse catalog)
+- POST /purchase-orders
+- GET /purchase-orders
+- GET /purchase-orders/{id}
 - POST /packages
 - GET /packages
 - GET /packages/{id}

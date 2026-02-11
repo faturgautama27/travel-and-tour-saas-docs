@@ -16,6 +16,9 @@ This document specifies the requirements for the backend API of a multi-tenant T
 - **Service**: Individual service offered by a supplier (hotel, flight, visa, transport, guide)
 - **Booking**: Customer reservation for a package departure with traveler details
 - **Departure**: Specific date instance of a package with quota management
+- **Purchase_Order**: Formal request from an agency to a supplier for service booking (PO)
+- **PO**: Abbreviation for Purchase Order
+- **PO_Number**: Unique identifier for a purchase order with format PO-YYMMDD-XXX
 - **Tenant_Context**: Agency identifier extracted from JWT token or X-Tenant-ID header
 - **RLS**: Row-Level Security policies in PostgreSQL ensuring data isolation
 - **CQRS**: Command Query Responsibility Segregation pattern using MediatR
@@ -334,3 +337,76 @@ This document specifies the requirements for the backend API of a multi-tenant T
 2. THE API SHALL provide a seed data script that creates sample agencies, suppliers, services, packages, and bookings
 3. WHEN seed data is executed, THE API SHALL check if data already exists to prevent duplicates
 4. THE seed data SHALL use realistic data that demonstrates all system features
+
+### Requirement 25: Agency - Create Purchase Order
+
+**User Story:** As an Agency_Staff, I want to create purchase orders to suppliers for service bookings, so that I can formally request services before creating packages.
+
+#### Acceptance Criteria
+
+1. WHEN an Agency_Staff creates a purchase order, THE API SHALL generate a unique PO number with format PO-YYMMDD-XXX
+2. WHEN an Agency_Staff creates a purchase order, THE API SHALL validate that supplier ID, at least one service, and service dates are provided
+3. WHEN an Agency_Staff creates a purchase order, THE API SHALL set the initial status to "pending"
+4. WHEN an Agency_Staff creates a purchase order, THE API SHALL store service details including service ID, quantity, start date, end date, and notes
+5. WHEN an Agency_Staff creates a purchase order, THE API SHALL associate the PO with their agency ID automatically
+6. WHEN an Agency_Staff creates a purchase order, THE API SHALL validate that all referenced services belong to the specified supplier
+7. WHEN an Agency_Staff creates a purchase order, THE API SHALL validate that quantities are positive integers
+8. WHEN an Agency_Staff creates a purchase order, THE API SHALL validate that end date is after or equal to start date
+9. WHEN an Agency_Staff creates a purchase order, THE API SHALL record the creation timestamp and creator user ID
+
+### Requirement 26: Supplier - View and Manage Purchase Orders
+
+**User Story:** As a Supplier, I want to view and manage purchase orders from agencies, so that I can approve or reject service requests.
+
+#### Acceptance Criteria
+
+1. WHEN a Supplier lists purchase orders, THE API SHALL return only POs where the supplier ID matches their supplier ID
+2. WHEN a Supplier filters POs by status, THE API SHALL return only POs matching the specified status
+3. WHEN a Supplier filters POs by date range, THE API SHALL return only POs with service dates within the specified range
+4. WHEN a Supplier searches POs by PO number, THE API SHALL return POs matching the search query
+5. WHEN a Supplier searches POs by agency name, THE API SHALL return POs from agencies matching the search query
+6. WHEN a Supplier views PO details, THE API SHALL return complete PO information including agency details, service list, quantities, dates, and notes
+7. THE API SHALL support pagination for supplier PO listing endpoints
+
+### Requirement 27: Supplier - Approve or Reject Purchase Order
+
+**User Story:** As a Supplier, I want to approve or reject purchase orders, so that I can confirm or decline service requests from agencies.
+
+#### Acceptance Criteria
+
+1. WHEN a Supplier approves a purchase order, THE API SHALL update the PO status to "approved"
+2. WHEN a Supplier approves a purchase order, THE API SHALL record the approval timestamp and approver user ID
+3. WHEN a Supplier rejects a purchase order, THE API SHALL update the PO status to "rejected"
+4. WHEN a Supplier rejects a purchase order, THE API SHALL validate that a rejection reason is provided
+5. WHEN a Supplier rejects a purchase order, THE API SHALL record the rejection timestamp, rejector user ID, and rejection reason
+6. WHEN a Supplier attempts to approve or reject a PO, THE API SHALL validate that the PO status is "pending"
+7. WHEN a Supplier attempts to approve or reject a PO, THE API SHALL validate that the PO belongs to their supplier ID
+8. WHEN a Supplier attempts to modify an already approved or rejected PO, THE API SHALL return a validation error
+
+### Requirement 28: Agency - View Purchase Order Status
+
+**User Story:** As an Agency_Staff, I want to view my purchase order status, so that I can track which service requests have been approved or rejected.
+
+#### Acceptance Criteria
+
+1. WHEN an Agency_Staff lists purchase orders, THE API SHALL return only POs belonging to their agency
+2. WHEN an Agency_Staff filters POs by status, THE API SHALL return only POs matching the specified status
+3. WHEN an Agency_Staff filters POs by supplier, THE API SHALL return only POs for the specified supplier
+4. WHEN an Agency_Staff searches POs by PO number, THE API SHALL return POs matching the search query
+5. WHEN an Agency_Staff views PO details, THE API SHALL return complete PO information including status, approval/rejection details, and timestamps
+6. WHEN an Agency_Staff views a rejected PO, THE API SHALL display the rejection reason
+7. THE API SHALL support pagination for agency PO listing endpoints
+
+### Requirement 29: Package-Purchase Order Linking
+
+**User Story:** As an Agency_Staff, I want packages to be linked to approved purchase orders, so that I can only create packages with confirmed supplier services.
+
+#### Acceptance Criteria
+
+1. WHEN an Agency_Staff creates a package, THE API SHALL validate that at least one approved purchase order is linked
+2. WHEN an Agency_Staff adds services to a package, THE API SHALL validate that each service is included in an approved PO
+3. WHEN an Agency_Staff creates a package, THE API SHALL store the linked PO IDs in the package record
+4. WHEN an Agency_Staff attempts to create a package without an approved PO, THE API SHALL return a validation error
+5. WHEN an Agency_Staff attempts to delete a purchase order, THE API SHALL prevent deletion if the PO is linked to any package
+6. WHEN an Agency_Staff views package details, THE API SHALL display the linked purchase order information
+7. WHEN a Supplier views services included in packages, THE API SHALL display which POs are linked to active packages

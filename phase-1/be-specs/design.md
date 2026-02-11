@@ -66,7 +66,9 @@ The Domain layer contains core business entities and domain logic. It has no dep
 - Agency (id, agencyCode, companyName, subscriptionPlan, isActive, commissionRate)
 - Supplier (id, supplierCode, companyName, status, businessType)
 - SupplierService (id, supplierId, serviceCode, serviceType, name, basePrice, serviceDetails)
-- Package (id, agencyId, packageCode, packageType, name, durationDays, baseCost, sellingPrice)
+- PurchaseOrder (id, poNumber, agencyId, supplierId, status, totalAmount, notes, rejectionReason)
+- POItem (id, poId, serviceId, serviceType, quantity, unitPrice, totalPrice, startDate, endDate)
+- Package (id, agencyId, approvedPOId, packageCode, packageType, name, durationDays, baseCost, sellingPrice)
 - PackageService (id, packageId, supplierServiceId, quantity, unitCost, totalCost)
 - PackageDeparture (id, packageId, departureCode, departureDate, totalQuota, availableQuota)
 - Booking (id, agencyId, packageId, packageDepartureId, bookingReference, bookingStatus, totalAmount)
@@ -92,6 +94,7 @@ The Application layer contains business logic orchestration using CQRS pattern. 
 - Agencies: CreateAgencyCommand, UpdateAgencyCommand, UpdateAgencyStatusCommand
 - Suppliers: ApproveSupplierCommand, RejectSupplierCommand
 - Services: CreateServiceCommand, UpdateServiceCommand, PublishServiceCommand
+- Purchase Orders: CreatePurchaseOrderCommand, UpdatePurchaseOrderCommand, DeletePurchaseOrderCommand, ApprovePurchaseOrderCommand, RejectPurchaseOrderCommand
 - Packages: CreatePackageCommand, UpdatePackageCommand, PublishPackageCommand
 - Departures: CreateDepartureCommand, UpdateDepartureCommand
 - Bookings: CreateBookingCommand, ApproveBookingCommand, RejectBookingCommand, CancelBookingCommand
@@ -100,6 +103,7 @@ The Application layer contains business logic orchestration using CQRS pattern. 
 - GetAgenciesQuery, GetAgencyByIdQuery
 - GetSuppliersQuery, GetSupplierByIdQuery
 - GetServicesQuery, GetServiceByIdQuery
+- GetPurchaseOrdersQuery, GetPurchaseOrderByIdQuery, GetSupplierPurchaseOrdersQuery
 - GetPackagesQuery, GetPackageByIdQuery
 - GetBookingsQuery, GetBookingByIdQuery
 - GetDashboardStatsQuery (per role)
@@ -514,6 +518,7 @@ Flight Service:
 CREATE TABLE packages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   agency_id UUID NOT NULL REFERENCES agencies(id) ON DELETE CASCADE,
+  approved_po_id UUID REFERENCES purchase_orders(id) ON DELETE RESTRICT,
   package_code VARCHAR(50) UNIQUE NOT NULL,
   package_type VARCHAR(50) NOT NULL CHECK (package_type IN ('umrah', 'hajj', 'tour', 'custom')),
   name VARCHAR(255) NOT NULL,
@@ -536,6 +541,7 @@ CREATE TABLE packages (
 CREATE INDEX idx_packages_agency ON packages(agency_id);
 CREATE INDEX idx_packages_type ON packages(package_type);
 CREATE INDEX idx_packages_status ON packages(status, visibility);
+CREATE INDEX idx_packages_po ON packages(approved_po_id);
 
 -- Row-Level Security
 ALTER TABLE packages ENABLE ROW LEVEL SECURITY;
@@ -547,6 +553,12 @@ CREATE POLICY packages_agency_isolation ON packages
     OR current_setting('app.current_user_type', true) = 'platform_admin'
   );
 ```
+
+**Note on Package-PO Linking:**
+- Packages must reference an approved purchase order via `approved_po_id`
+- Package creation validates that the PO status is "approved" before allowing package creation
+- This ensures agencies can only create packages with confirmed supplier services
+- The foreign key constraint with `ON DELETE RESTRICT` prevents deletion of POs linked to packages
 
 #### Package Services Table
 
@@ -683,16 +695,110 @@ CREATE INDEX idx_travelers_booking ON travelers(booking_id);
 CREATE INDEX idx_travelers_passport ON travelers(passport_number);
 ```
 
+#### Purchase Orders Table
+
+```sql
+CREATE TABLE purchase_orders (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  po_number VARCHAR(50) UNIQUE NOT NULL,
+  agency_id UUID NOT NULL REFERENCES agencies(id) ON DELETE RESTRICT,
+  supplier_id UUID NOT NULL REFERENCES suppliers(id) ON DELETE RESTRICT,
+  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  total_amount DECIMAL(15,2),
+  notes TEXT,
+  rejection_reason TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_by UUID REFERENCES users(id),
+  approved_at TIMESTAMP,
+  approved_by UUID REFERENCES users(id),
+  rejected_at TIMESTAMP,
+  rejected_by UUID REFERENCES users(id)
+);
+
+CREATE INDEX idx_purchase_orders_agency ON purchase_orders(agency_id);
+CREATE INDEX idx_purchase_orders_supplier ON purchase_orders(supplier_id);
+CREATE INDEX idx_purchase_orders_status ON purchase_orders(status);
+CREATE INDEX idx_purchase_orders_number ON purchase_orders(po_number);
+
+-- Row-Level Security
+ALTER TABLE purchase_orders ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY purchase_orders_agency_isolation ON purchase_orders
+  FOR ALL
+  USING (
+    agency_id = current_setting('app.current_agency_id', true)::UUID
+    OR supplier_id IN (SELECT id FROM suppliers WHERE id = current_setting('app.current_supplier_id', true)::UUID)
+    OR current_setting('app.current_user_type', true) = 'platform_admin'
+  );
+```
+
+**PO Number Generation Trigger:**
+```sql
+CREATE OR REPLACE FUNCTION generate_po_number()
+RETURNS TRIGGER AS $
+DECLARE
+    date_part VARCHAR(6);
+    seq_part VARCHAR(3);
+BEGIN
+    date_part := TO_CHAR(CURRENT_DATE, 'YYMMDD');
+    
+    SELECT LPAD((COUNT(*) + 1)::TEXT, 3, '0')
+    INTO seq_part
+    FROM purchase_orders
+    WHERE DATE(created_at) = CURRENT_DATE;
+    
+    NEW.po_number := 'PO-' || date_part || '-' || seq_part;
+    RETURN NEW;
+END;
+$ LANGUAGE plpgsql;
+
+CREATE TRIGGER generate_po_number_trigger
+    BEFORE INSERT ON purchase_orders
+    FOR EACH ROW
+    WHEN (NEW.po_number IS NULL)
+    EXECUTE FUNCTION generate_po_number();
+```
+
+#### PO Items Table
+
+```sql
+CREATE TABLE po_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  po_id UUID NOT NULL REFERENCES purchase_orders(id) ON DELETE CASCADE,
+  service_id UUID NOT NULL REFERENCES supplier_services(id) ON DELETE RESTRICT,
+  service_type VARCHAR(50),
+  quantity INTEGER NOT NULL CHECK (quantity > 0),
+  unit_price DECIMAL(15,2),
+  total_price DECIMAL(15,2),
+  start_date DATE,
+  end_date DATE,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT check_date_range CHECK (end_date >= start_date)
+);
+
+CREATE INDEX idx_po_items_po ON po_items(po_id);
+CREATE INDEX idx_po_items_service ON po_items(service_id);
+```
+
 ### Entity Relationships
 
 ```
 users ──┬─→ agencies (agency_id)
         └─→ suppliers (supplier_id)
 
-agencies ──→ packages (agency_id)
-         └─→ bookings (agency_id)
+agencies ──┬─→ packages (agency_id)
+           ├─→ bookings (agency_id)
+           └─→ purchase_orders (agency_id)
 
-suppliers ──→ supplier_services (supplier_id)
+suppliers ──┬─→ supplier_services (supplier_id)
+            └─→ purchase_orders (supplier_id)
+
+purchase_orders ──┬─→ po_items (po_id)
+                  └─→ packages (approved_po_id)
+
+po_items ──→ supplier_services (service_id)
 
 packages ──┬─→ package_services (package_id)
            └─→ package_departures (package_id)
@@ -729,6 +835,7 @@ public record UserDto(
 **Package DTOs:**
 ```csharp
 public record CreatePackageRequest(
+    Guid ApprovedPOId,
     string PackageType,
     string Name,
     string Description,
@@ -768,6 +875,7 @@ public record PackageResponse(
     decimal BaseCost,
     decimal SellingPrice,
     string Status,
+    PurchaseOrderSummaryDto ApprovedPO,
     List<PackageServiceResponse> Services,
     List<DepartureResponse> Departures
 );
@@ -806,6 +914,77 @@ public record BookingResponse(
     int TravelerCount,
     PackageSummaryDto Package,
     List<TravelerResponse> Travelers
+);
+```
+
+**Purchase Order DTOs:**
+```csharp
+public record CreatePurchaseOrderRequest(
+    Guid SupplierId,
+    List<POItemDto> Items,
+    string Notes
+);
+
+public record POItemDto(
+    Guid ServiceId,
+    int Quantity,
+    DateTime StartDate,
+    DateTime EndDate,
+    string Notes
+);
+
+public record UpdatePurchaseOrderRequest(
+    List<POItemDto> Items,
+    string Notes
+);
+
+public record ApprovePurchaseOrderRequest();
+
+public record RejectPurchaseOrderRequest(
+    string RejectionReason
+);
+
+public record PurchaseOrderResponse(
+    Guid Id,
+    string PONumber,
+    string Status,
+    Guid AgencyId,
+    string AgencyName,
+    Guid SupplierId,
+    string SupplierName,
+    decimal TotalAmount,
+    List<POItemResponse> Items,
+    string Notes,
+    string RejectionReason,
+    DateTime CreatedAt,
+    Guid CreatedBy,
+    DateTime? ApprovedAt,
+    Guid? ApprovedBy,
+    DateTime? RejectedAt,
+    Guid? RejectedBy,
+    DateTime UpdatedAt
+);
+
+public record POItemResponse(
+    Guid Id,
+    Guid ServiceId,
+    string ServiceName,
+    string ServiceType,
+    int Quantity,
+    decimal UnitPrice,
+    decimal TotalPrice,
+    DateTime StartDate,
+    DateTime EndDate,
+    string Notes
+);
+
+public record PurchaseOrderSummaryDto(
+    Guid Id,
+    string PONumber,
+    string Status,
+    string SupplierName,
+    decimal TotalAmount,
+    DateTime CreatedAt
 );
 ```
 
@@ -1150,6 +1329,66 @@ public record PaginationMeta(
 
 **Validates: Requirements 24.3**
 
+### Property 51: PO Number Uniqueness
+
+*For any* purchase order created, the generated PO number should be unique across all purchase orders and follow the format PO-YYMMDD-XXX.
+
+**Validates: Requirements 25.1**
+
+### Property 52: PO Status Workflow
+
+*For any* purchase order, the status transitions should follow valid state machine rules: pending → approved OR pending → rejected, and no other transitions should be allowed.
+
+**Validates: Requirements 25.3, 27.1, 27.3**
+
+### Property 53: PO Approval Authorization
+
+*For any* purchase order approval or rejection, only the supplier who owns the services in the PO should be able to approve or reject it.
+
+**Validates: Requirements 26.1, 27.7**
+
+### Property 54: PO Service Validation
+
+*For any* purchase order creation, all referenced services should belong to the specified supplier, and all quantities should be positive integers.
+
+**Validates: Requirements 25.6, 25.7**
+
+### Property 55: PO Date Range Validation
+
+*For any* PO item, the end date should be after or equal to the start date.
+
+**Validates: Requirements 25.8**
+
+### Property 56: Package-PO Linking Validation
+
+*For any* package creation, if the package includes services, there must be at least one approved purchase order linked, and all services must be included in approved POs.
+
+**Validates: Requirements 29.1, 29.2, 29.4**
+
+### Property 57: PO Deletion Constraint
+
+*For any* purchase order deletion attempt, if the PO is linked to any package, the deletion should be rejected with a conflict error.
+
+**Validates: Requirements 29.5**
+
+### Property 58: PO Multi-Tenant Isolation
+
+*For any* agency staff user querying purchase orders, the results should contain only POs belonging to their agency; for any supplier user, the results should contain only POs for their supplier.
+
+**Validates: Requirements 26.1, 28.1**
+
+### Property 59: PO Rejection Reason Requirement
+
+*For any* purchase order rejection, a rejection reason must be provided and stored with the rejection timestamp and rejector user ID.
+
+**Validates: Requirements 27.4, 27.5**
+
+### Property 60: PO Modification Prevention
+
+*For any* purchase order with status "approved" or "rejected", any attempt to modify or change status should be rejected with a validation error.
+
+**Validates: Requirements 27.6, 27.8**
+
 ## API Endpoints Specification
 
 ### Base URL
@@ -1233,6 +1472,15 @@ X-Tenant-ID: {agency_id}
 |--------|----------|-------------|---------------|
 | GET | `/supplier/dashboard/stats` | Get supplier statistics | Supplier |
 
+**Purchase Orders:**
+
+| Method | Endpoint | Description | Role Required |
+|--------|----------|-------------|---------------|
+| GET | `/supplier/purchase-orders` | List POs for my services | Supplier |
+| GET | `/supplier/purchase-orders/{id}` | Get PO details | Supplier |
+| PATCH | `/supplier/purchase-orders/{id}/approve` | Approve purchase order | Supplier |
+| PATCH | `/supplier/purchase-orders/{id}/reject` | Reject purchase order | Supplier |
+
 #### 4. Agency Endpoints
 
 **Packages:**
@@ -1275,6 +1523,16 @@ X-Tenant-ID: {agency_id}
 |--------|----------|-------------|---------------|
 | GET | `/supplier-services` | Browse marketplace services | Agency Staff |
 | GET | `/supplier-services/{id}` | Get service details | Agency Staff |
+
+**Purchase Orders:**
+
+| Method | Endpoint | Description | Role Required |
+|--------|----------|-------------|---------------|
+| GET | `/purchase-orders` | List my purchase orders | Agency Staff |
+| POST | `/purchase-orders` | Create new purchase order | Agency Staff |
+| GET | `/purchase-orders/{id}` | Get PO details | Agency Staff |
+| PUT | `/purchase-orders/{id}` | Update PO (pending only) | Agency Staff |
+| DELETE | `/purchase-orders/{id}` | Delete PO (pending only) | Agency Staff |
 
 **Dashboard:**
 

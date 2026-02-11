@@ -510,7 +510,7 @@ The plan follows a role-by-role implementation approach:
   - Ask user if questions arise
 
 
-### Week 6: Agency Features - Part 2 (Mar 18-24)
+### Week 6: Agency Features - Part 2 & Purchase Orders (Mar 18-24)
 
 - [ ] 36. Implement Package Form - Part 2
   - [ ] 36.1 Create PackageFormComponent - Step 3 (Pricing)
@@ -610,18 +610,113 @@ The plan follows a role-by-role implementation approach:
   - Add role guard with 'agency_staff' role
   - _Requirements: 7.2_
 
-- [ ] 42. Checkpoint - Test Agency features (Part 2)
+- [ ] 42. Create Purchase Order models
+  - Create PurchaseOrder model (purchase-order.model.ts)
+  - Create POItem interface
+  - Create CreatePurchaseOrderDto, POActionDto
+  - _Requirements: 5.4_
+
+- [ ] 43. Create Purchase Order API services
+  - [ ] 43.1 Create POApiService (Agency)
+    - Implement getPurchaseOrders, getPOById, createPO methods
+    - Extend BaseApiService
+    - _Requirements: 9.2_
+  
+  - [ ] 43.2 Create POApiService (Supplier)
+    - Implement getPurchaseOrders, getPOById, approvePO, rejectPO methods
+    - Extend BaseApiService
+    - _Requirements: 9.2_
+
+- [ ] 44. Implement Agency Purchase Order components
+  - [ ] 44.1 Create POListComponent (Agency)
+    - Create data table with columns: PO Code, Supplier Name, Total Amount, Status, Created Date
+    - Implement filter by status (pending, approved, rejected)
+    - Implement filter by supplier
+    - Implement search by PO code
+    - Add quick action buttons (view details)
+    - Add create new PO button
+    - Add status badges with colors
+    - _Requirements: US-4.11, 4.7.1_
+  
+  - [ ] 44.2 Create POFormComponent (Agency)
+    - Create form with supplier selection dropdown
+    - Create dynamic PO items array (add/remove items)
+    - Implement service selection from supplier's services
+    - Auto-fill unit price from service
+    - Auto-calculate item totals and grand total
+    - Implement form validation
+    - Display loading state during creation
+    - Show success message with PO code
+    - _Requirements: US-4.10, 4.7.2_
+  
+  - [ ]* 44.3 Write property test for PO total calculation
+    - **Property 13: PO Total Calculation**
+    - Test that total amount equals sum of all item totals
+    - Test that item total equals quantity × unit price
+    - Generate random PO items
+    - Verify calculations
+    - _Requirements: US-4.10_
+  
+  - [ ] 44.4 Create PODetailComponent (Agency)
+    - Display PO information (code, supplier, status, dates)
+    - Display PO items table (service, quantity, unit price, total)
+    - Display total amount
+    - Display approval/rejection information if applicable
+    - Add Create Package button (if status is approved)
+    - Add Back to List button
+    - _Requirements: US-4.12, 4.7.3_
+
+- [ ] 45. Implement Supplier Purchase Order components
+  - [ ] 45.1 Create POListComponent (Supplier)
+    - Create separate section for pending approvals (highlighted)
+    - Create data table with columns: PO Code, Agency Name, Total Amount, Status, Created Date
+    - Implement filter by status
+    - Implement search by PO code or agency name
+    - Add quick action buttons (view, approve, reject)
+    - Add status badges with colors
+    - _Requirements: US-4.14, 4.8.1_
+  
+  - [ ] 45.2 Create PODetailComponent (Supplier)
+    - Display PO information (code, agency, status, dates)
+    - Display PO items table
+    - Display total amount
+    - Add Approve button (if status is pending)
+    - Add Reject button with reason input (if status is pending)
+    - Implement approval logic with confirmation
+    - Implement rejection logic with reason dialog
+    - Display loading state during actions
+    - _Requirements: US-4.15, US-4.16, US-4.17, 4.8.2_
+  
+  - [ ]* 45.3 Write property test for PO approval workflow
+    - **Property 14: PO Approval Workflow**
+    - Test that approved PO status changes to 'approved'
+    - Test that rejected PO status changes to 'rejected'
+    - Test that rejected PO requires reason
+    - _Requirements: US-4.16, US-4.17_
+
+- [ ] 46. Update Package Form to support PO linking
+  - Add optional approved_po_id field to package creation
+  - Pre-fill services from PO when creating package from PO
+  - Display PO code in package form if linked
+  - Allow adding additional services not in PO
+  - _Requirements: US-4.13_
+
+- [ ] 47. Checkpoint - Test Agency features (Part 2) & Purchase Orders
   - Ensure package creation works end-to-end
   - Test pricing calculations
   - Test booking list and detail views
   - Test booking approval/rejection
   - Verify quota management
+  - Test PO creation flow (Agency)
+  - Test PO approval/rejection flow (Supplier)
+  - Test package creation from approved PO
+  - Verify PO total calculations
   - Ask user if questions arise
 
 
 ### Week 7: Traveler Features (Mar 25-31)
 
-- [ ] 43. Create Traveler models
+- [ ] 48. Create Traveler models
   - Reuse Package model from agency (add TravelerPackage with display fields)
   - Reuse Booking and Traveler models from agency
   - _Requirements: 5.5_
@@ -760,119 +855,119 @@ The plan follows a role-by-role implementation approach:
 
 ### Week 8: State Management & Integration (Apr 1-7)
 
-- [ ] 52. Implement NgRx stores for features
-  - [ ] 52.1 Create Agency store
+- [ ] 57. Implement NgRx stores for features
+  - [ ] 57.1 Create Agency store
     - Create agency state, actions, reducer
     - Create agency effects for API calls
     - Create agency selectors
     - _Requirements: 6.3_
   
-  - [ ] 52.2 Create Supplier store
+  - [ ] 57.2 Create Supplier store
     - Create supplier state, actions, reducer
     - Create supplier effects for API calls
     - Create supplier selectors
     - _Requirements: 6.3_
   
-  - [ ] 52.3 Create Package store
+  - [ ] 57.3 Create Package store
     - Create package state, actions, reducer
     - Create package effects for API calls
     - Create package selectors
     - Use EntityAdapter for package entities
     - _Requirements: 6.3_
   
-  - [ ] 52.4 Create Booking store
+  - [ ] 57.4 Create Booking store
     - Create booking state, actions, reducer
     - Create booking effects for API calls
     - Create booking selectors
     - Use EntityAdapter for booking entities
     - _Requirements: 6.3_
   
-  - [ ]* 52.5 Write unit tests for reducers
+  - [ ]* 57.5 Write unit tests for reducers
     - Test package reducer actions
     - Test booking reducer actions
     - Test initial states
     - Test state updates
     - _Requirements: 11.4_
 
-- [ ] 53. Integrate stores with components
-  - [ ] 53.1 Refactor Platform Admin components to use stores
+- [ ] 58. Integrate stores with components
+  - [ ] 58.1 Refactor Platform Admin components to use stores
     - Update AgencyListComponent to use agency store
     - Update SupplierListComponent to use supplier store
     - Dispatch actions instead of direct API calls
     - _Requirements: 6.1_
   
-  - [ ] 53.2 Refactor Agency components to use stores
+  - [ ] 58.2 Refactor Agency components to use stores
     - Update PackageListComponent to use package store
     - Update BookingListComponent to use booking store
     - Dispatch actions instead of direct API calls
     - _Requirements: 6.1_
   
-  - [ ] 53.3 Refactor Traveler components to use stores
+  - [ ] 58.3 Refactor Traveler components to use stores
     - Update PackageBrowseComponent to use package store
     - Update MyBookingsComponent to use booking store
     - Dispatch actions instead of direct API calls
     - _Requirements: 6.1_
 
-- [ ] 54. Implement shared utilities
-  - [ ] 54.1 Create ValidationUtils
+- [ ] 59. Implement shared utilities
+  - [ ] 59.1 Create ValidationUtils
     - Implement getErrorMessage method
     - Implement markFormGroupTouched method
     - _Requirements: 10.3_
   
-  - [ ] 54.2 Create DateUtils
+  - [ ] 59.2 Create DateUtils
     - Implement date formatting functions
     - Implement date validation functions
     - _Requirements: 4.8_
   
-  - [ ]* 54.3 Write unit tests for utilities
+  - [ ]* 59.3 Write unit tests for utilities
     - Test ValidationUtils methods
     - Test DateUtils methods
     - Test various input scenarios
     - _Requirements: 11.2_
 
 
-- [ ] 55. Implement shared pipes
-  - [ ] 55.1 Create DateFormatPipe
+- [ ] 60. Implement shared pipes
+  - [ ] 60.1 Create DateFormatPipe
     - Implement transform method for date formatting
     - Support multiple date formats
     - _Requirements: 4.8_
   
-  - [ ] 55.2 Create CurrencyFormatPipe
+  - [ ] 60.2 Create CurrencyFormatPipe
     - Implement transform method for currency formatting
     - Support IDR currency
     - _Requirements: 4.8_
   
-  - [ ]* 55.3 Write unit tests for pipes
+  - [ ]* 60.3 Write unit tests for pipes
     - Test DateFormatPipe with various dates
     - Test CurrencyFormatPipe with various amounts
     - _Requirements: 11.2_
 
-- [ ] 56. Configure root routes
+- [ ] 61. Configure root routes
   - Update app.routes.ts with all feature routes
   - Configure role-based guards for all routes
   - Set up default redirects
   - Configure 404 handling
   - _Requirements: 7.1_
 
-- [ ] 57. Implement global error handling
+- [ ] 62. Implement global error handling
   - Ensure ErrorInterceptor handles all error types
   - Test 401, 403, 404, 500 error scenarios
   - Verify error messages display correctly
   - _Requirements: 10.1_
 
-- [ ] 58. Implement global loading indicator
+- [ ] 63. Implement global loading indicator
   - Add loading spinner to app.html
   - Connect to LoadingService
   - Test with various API calls
   - _Requirements: 10.4_
 
-- [ ] 59. Add PrimeNG Toast for notifications
+- [ ] 64. Add PrimeNG Toast for notifications
   - Add p-toast component to app.html
   - Configure MessageService in app.config.ts
   - Test success, error, warning, info notifications
   - _Requirements: 10.2_
 
-- [ ] 60. Checkpoint - Test full integration
+- [ ] 65. Checkpoint - Test full integration
   - Ensure all features work together
   - Test navigation between all pages
   - Test state management across features
@@ -882,114 +977,114 @@ The plan follows a role-by-role implementation approach:
 
 ### Week 9: Testing & Bug Fixes (Apr 8-14)
 
-- [ ] 61. Write core service tests
-  - [ ]* 61.1 Write tests for AuthService
+- [ ] 66. Write core service tests
+  - [ ]* 66.1 Write tests for AuthService
     - Test login method
     - Test register method
     - Test logout method
     - Test token storage
     - _Requirements: 11.2_
   
-  - [ ]* 61.2 Write tests for BaseApiService
+  - [ ]* 66.2 Write tests for BaseApiService
     - Test HTTP methods (get, post, put, patch, delete)
     - Test query parameter building
     - Test response unwrapping
     - _Requirements: 11.2_
   
-  - [ ]* 61.3 Write tests for NotificationService
+  - [ ]* 66.3 Write tests for NotificationService
     - Test showSuccess, showError, showWarning, showInfo
     - Test message display
     - _Requirements: 11.2_
 
-- [ ] 62. Write property tests for correctness properties
-  - [ ]* 62.1 Write property test for role-based routing
+- [ ] 67. Write property tests for correctness properties
+  - [ ]* 67.1 Write property test for role-based routing
     - **Property 2: Role-Based Routing**
     - Test that users can only access routes matching their role
     - Test redirect to login for unauthorized access
     - _Requirements: 3.3_
   
-  - [ ]* 62.2 Write property test for token persistence
+  - [ ]* 67.2 Write property test for token persistence
     - **Property 3: Authentication Token Persistence**
     - Test that token is stored after login
     - Test that token is included in API requests
     - Test that token persists across page refresh
     - _Requirements: US-1.1_
   
-  - [ ]* 62.3 Write property test for loading states
+  - [ ]* 67.3 Write property test for loading states
     - **Property 9: Loading State Management**
     - Test that loading indicator shows during API calls
     - Test that loading indicator hides after completion
     - Test with multiple concurrent requests
     - _Requirements: US-1.1, US-1.2_
   
-  - [ ]* 62.4 Write property test for error messages
+  - [ ]* 67.4 Write property test for error messages
     - **Property 10: Error Message Display**
     - Test that error messages display on failed operations
     - Test various error scenarios
     - _Requirements: US-1.1, 3.3_
   
-  - [ ]* 62.5 Write property test for token expiry
+  - [ ]* 67.5 Write property test for token expiry
     - **Property 11: Token Expiry Handling**
     - Test that 401 response triggers logout
     - Test redirect to login page
     - _Requirements: 3.3_
 
-- [ ] 63. Write component tests for critical components
-  - [ ]* 63.1 Write tests for LoginComponent
+- [ ] 68. Write component tests for critical components
+  - [ ]* 68.1 Write tests for LoginComponent
     - Test form validation
     - Test login action dispatch
     - Test error display
     - _Requirements: 11.3_
   
-  - [ ]* 63.2 Write tests for PackageFormComponent
+  - [ ]* 68.2 Write tests for PackageFormComponent
     - Test multi-step navigation
     - Test cost calculations
     - Test form validation
     - _Requirements: 11.3_
   
-  - [ ]* 63.3 Write tests for BookingFormComponent
+  - [ ]* 68.3 Write tests for BookingFormComponent
     - Test traveler form array
     - Test mahram validation
     - Test price calculation
     - _Requirements: 11.3_
 
 
-- [ ] 64. Run test coverage report
+- [ ] 69. Run test coverage report
   - Run `npm run test:coverage`
   - Review coverage report
   - Identify gaps in coverage
   - Add tests for uncovered critical code
   - _Requirements: 11.5_
 
-- [ ] 65. Manual testing and bug fixes
-  - [ ] 65.1 Test all user flows for Platform Admin
+- [ ] 70. Manual testing and bug fixes
+  - [ ] 70.1 Test all user flows for Platform Admin
     - Test agency CRUD operations
     - Test supplier approval flow
     - Fix any bugs found
     - _Requirements: US-2.1, US-2.2, US-2.3, US-2.4, US-2.5_
   
-  - [ ] 65.2 Test all user flows for Supplier
+  - [ ] 70.2 Test all user flows for Supplier
     - Test service creation for all types
     - Test service list and filters
     - Test draft functionality
     - Fix any bugs found
     - _Requirements: US-3.1, US-3.2, US-3.3_
   
-  - [ ] 65.3 Test all user flows for Agency
+  - [ ] 70.3 Test all user flows for Agency
     - Test package creation end-to-end
     - Test booking list and approval
     - Test service catalog
     - Fix any bugs found
     - _Requirements: US-4.1, US-4.2, US-4.3, US-4.4, US-4.5, US-4.6, US-4.7, US-4.8_
   
-  - [ ] 65.4 Test all user flows for Traveler
+  - [ ] 70.4 Test all user flows for Traveler
     - Test package browsing and search
     - Test booking creation
     - Test my bookings
     - Fix any bugs found
     - _Requirements: US-5.1, US-5.2, US-5.3, US-5.4, US-5.5, US-5.6_
 
-- [ ] 66. Cross-browser testing
+- [ ] 71. Cross-browser testing
   - Test on Chrome (latest)
   - Test on Firefox (latest)
   - Test on Safari (latest)
@@ -997,14 +1092,14 @@ The plan follows a role-by-role implementation approach:
   - Fix any browser-specific issues
   - _Requirements: 3.4_
 
-- [ ] 67. Responsive design testing
+- [ ] 72. Responsive design testing
   - Test on desktop (1920x1080)
   - Test on tablet (768x1024)
   - Test on mobile (375x667)
   - Fix any responsive issues
   - _Requirements: 3.2_
 
-- [ ] 68. Checkpoint - Verify all tests pass
+- [ ] 73. Checkpoint - Verify all tests pass
   - Ensure all unit tests pass
   - Ensure all property tests pass
   - Ensure no critical bugs remain
@@ -1013,134 +1108,134 @@ The plan follows a role-by-role implementation approach:
 
 ### Week 10: Polish, Optimization & Demo Preparation (Apr 15-21)
 
-- [ ] 69. Performance optimization
-  - [ ] 69.1 Implement OnPush change detection strategy
+- [ ] 74. Performance optimization
+  - [ ] 74.1 Implement OnPush change detection strategy
     - Update all list components to use OnPush
     - Update all card components to use OnPush
     - Test performance improvements
     - _Requirements: 13.2_
   
-  - [ ] 69.2 Add trackBy functions to all ngFor loops
+  - [ ] 74.2 Add trackBy functions to all ngFor loops
     - Identify all ngFor loops
     - Add trackBy functions
     - Test rendering performance
     - _Requirements: 13.2_
   
-  - [ ] 69.3 Optimize bundle size
+  - [ ] 74.3 Optimize bundle size
     - Analyze bundle with webpack-bundle-analyzer
     - Remove unused imports
     - Verify tree shaking is working
     - _Requirements: 13.1_
   
-  - [ ] 69.4 Add lazy loading for images
+  - [ ] 74.4 Add lazy loading for images
     - Add loading="lazy" to all images
     - Test image loading behavior
     - _Requirements: 13.4_
 
-- [ ] 70. Accessibility improvements
-  - [ ] 70.1 Add ARIA labels to all interactive elements
+- [ ] 75. Accessibility improvements
+  - [ ] 75.1 Add ARIA labels to all interactive elements
     - Add aria-label to buttons without text
     - Add aria-required to required form fields
     - Add aria-live regions for dynamic content
     - _Requirements: 15.1, 15.3_
   
-  - [ ] 70.2 Verify keyboard navigation
+  - [ ] 75.2 Verify keyboard navigation
     - Test tab order on all pages
     - Test escape key closes dialogs
     - Test enter key submits forms
     - Fix any keyboard navigation issues
     - _Requirements: 15.2_
   
-  - [ ] 70.3 Check color contrast
+  - [ ] 75.3 Check color contrast
     - Use color contrast checker tool
     - Verify WCAG AA compliance
     - Fix any contrast issues
     - _Requirements: 15.4_
 
-- [ ] 71. UI polish
-  - [ ] 71.1 Add loading skeletons
+- [ ] 76. UI polish
+  - [ ] 76.1 Add loading skeletons
     - Add skeleton loaders for tables
     - Add skeleton loaders for cards
     - Test loading states
     - _Requirements: 3.2_
   
-  - [ ] 71.2 Add empty states
+  - [ ] 76.2 Add empty states
     - Add empty state for empty lists
     - Add empty state for no search results
     - Add helpful messages and actions
     - _Requirements: 3.2_
   
-  - [ ] 71.3 Add transitions and animations
+  - [ ] 76.3 Add transitions and animations
     - Add fade-in animations for page loads
     - Add smooth transitions for dialogs
     - Add hover effects for buttons
     - Keep animations subtle and professional
     - _Requirements: 3.2_
   
-  - [ ] 71.4 Review and polish all forms
+  - [ ] 76.4 Review and polish all forms
     - Ensure consistent spacing
     - Ensure consistent validation messages
     - Ensure consistent button placement
     - _Requirements: 3.2_
 
 
-- [ ] 72. Documentation
-  - [ ] 72.1 Update README.md
+- [ ] 77. Documentation
+  - [ ] 77.1 Update README.md
     - Add project description
     - Add setup instructions
     - Add development commands
     - Add build instructions
     - _Requirements: 17.1_
   
-  - [ ] 72.2 Add code comments
+  - [ ] 77.2 Add code comments
     - Add JSDoc comments to complex functions
     - Add comments to complex business logic
     - Add comments to utility functions
     - _Requirements: 4.5_
   
-  - [ ] 72.3 Create deployment guide
+  - [ ] 77.3 Create deployment guide
     - Document build process
     - Document environment configuration
     - Document hosting options
     - _Requirements: 16_
 
-- [ ] 73. Prepare demo data
-  - [ ] 73.1 Create seed data for Platform Admin
+- [ ] 78. Prepare demo data
+  - [ ] 78.1 Create seed data for Platform Admin
     - Create sample agencies
     - Create sample suppliers (some pending approval)
     - _Requirements: 7.3_
   
-  - [ ] 73.2 Create seed data for Supplier
+  - [ ] 78.2 Create seed data for Supplier
     - Create sample services (all types)
     - Create mix of draft and published services
     - _Requirements: 7.3_
   
-  - [ ] 73.3 Create seed data for Agency
+  - [ ] 78.3 Create seed data for Agency
     - Create sample packages (Umrah, Hajj, Tour)
     - Create sample bookings (various statuses)
     - _Requirements: 7.3_
   
-  - [ ] 73.4 Create seed data for Traveler
+  - [ ] 78.4 Create seed data for Traveler
     - Create sample customer account
     - Create sample bookings
     - _Requirements: 7.3_
 
-- [ ] 74. Prepare demo script
-  - [ ] 74.1 Document Platform Admin demo flow
+- [ ] 79. Prepare demo script
+  - [ ] 79.1 Document Platform Admin demo flow
     - Login as platform admin
     - Show dashboard
     - Show agency management
     - Show supplier approval
     - _Requirements: 7.3_
   
-  - [ ] 74.2 Document Supplier demo flow
+  - [ ] 79.2 Document Supplier demo flow
     - Login as supplier
     - Show dashboard
     - Create new service (hotel)
     - Show service list
     - _Requirements: 7.3_
   
-  - [ ] 74.3 Document Agency demo flow
+  - [ ] 79.3 Document Agency demo flow
     - Login as agency staff
     - Show dashboard
     - Browse service catalog
@@ -1149,7 +1244,7 @@ The plan follows a role-by-role implementation approach:
     - Approve booking
     - _Requirements: 7.3_
   
-  - [ ] 74.4 Document Traveler demo flow
+  - [ ] 79.4 Document Traveler demo flow
     - Login as traveler
     - Browse packages
     - View package details
@@ -1157,27 +1252,27 @@ The plan follows a role-by-role implementation approach:
     - Show my bookings
     - _Requirements: 7.3_
 
-- [ ] 75. Final testing and validation
-  - [ ] 75.1 Run full demo script
+- [ ] 80. Final testing and validation
+  - [ ] 80.1 Run full demo script
     - Execute all demo flows
     - Verify all features work
     - Fix any last-minute issues
     - _Requirements: 7.3_
   
-  - [ ] 75.2 Verify all acceptance criteria
+  - [ ] 80.2 Verify all acceptance criteria
     - Review requirements document
     - Verify each user story is implemented
     - Verify each acceptance criterion is met
     - _Requirements: 7.1_
   
-  - [ ] 75.3 Build production bundle
+  - [ ] 80.3 Build production bundle
     - Run `npm run build:prod`
     - Verify build succeeds
     - Check bundle size
     - Test production build locally
     - _Requirements: 16.1_
 
-- [ ] 76. Final checkpoint - Demo ready
+- [ ] 81. Final checkpoint - Demo ready
   - Ensure all features are polished
   - Ensure demo runs smoothly
   - Ensure all documentation is complete

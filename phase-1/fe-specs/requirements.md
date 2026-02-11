@@ -383,7 +383,118 @@ Build a responsive, multi-tenant SaaS frontend application for tour & travel age
 
 ---
 
-### 2.5 Traveler Features
+### 2.5 Agency Features - Purchase Order
+
+**US-4.10: Create Purchase Order**
+- **As an** agency staff
+- **I want to** create a purchase order to a supplier
+- **So that** I can request services for my packages
+
+**Acceptance Criteria:**
+- Form with supplier selection (dropdown)
+- Add multiple PO items (service, quantity, unit price)
+- Display total amount calculation
+- Form validation (all fields required)
+- Display loading state during creation
+- Show success message with PO code
+- Redirect to PO list
+
+**US-4.11: View Purchase Order List**
+- **As an** agency staff
+- **I want to** view all my purchase orders
+- **So that** I can track their status
+
+**Acceptance Criteria:**
+- Table view with: PO Code, Supplier Name, Total Amount, Status, Created Date
+- Filter by status (pending, approved, rejected)
+- Filter by supplier
+- Search by PO code
+- Sort by columns
+- Quick actions: view details
+- Status badges with colors (pending=warning, approved=success, rejected=danger)
+
+**US-4.12: View Purchase Order Details**
+- **As an** agency staff
+- **I want to** view PO details
+- **So that** I can see all information
+
+**Acceptance Criteria:**
+- Display PO information (code, supplier, status, dates)
+- Display PO items table (service, quantity, unit price, total)
+- Display total amount
+- Display approval/rejection information if applicable
+- Create Package button (if status is approved)
+
+**US-4.13: Create Package from Approved PO**
+- **As an** agency staff
+- **I want to** create a package from an approved PO
+- **So that** I can use the ordered services
+
+**Acceptance Criteria:**
+- Pre-fill package form with services from PO
+- Allow editing package details (name, type, duration, etc)
+- Allow adding additional services not in PO
+- Link package to PO (approved_po_id)
+- Follow normal package creation flow
+- Display PO code in package details
+
+---
+
+### 2.6 Supplier Features - Purchase Order
+
+**US-4.14: View Purchase Order List (Supplier)**
+- **As a** supplier
+- **I want to** view purchase orders sent to me
+- **So that** I can manage them
+
+**Acceptance Criteria:**
+- Table view with: PO Code, Agency Name, Total Amount, Status, Created Date
+- Separate section for pending approvals (highlighted)
+- Filter by status (pending, approved, rejected)
+- Search by PO code or agency name
+- Sort by columns
+- Quick actions: view details, approve (if pending), reject (if pending)
+
+**US-4.15: View Purchase Order Details (Supplier)**
+- **As a** supplier
+- **I want to** view PO details
+- **So that** I can review before approval
+
+**Acceptance Criteria:**
+- Display PO information (code, agency, status, dates)
+- Display PO items table (service, quantity, unit price, total)
+- Display total amount
+- Approve button (if status is pending)
+- Reject button with reason input (if status is pending)
+
+**US-4.16: Approve Purchase Order**
+- **As a** supplier
+- **I want to** approve a purchase order
+- **So that** the agency can proceed with package creation
+
+**Acceptance Criteria:**
+- Confirmation dialog
+- Display loading state during approval
+- Update PO status to "approved"
+- Show success message
+- Update PO list
+
+**US-4.17: Reject Purchase Order**
+- **As a** supplier
+- **I want to** reject a purchase order
+- **So that** I can decline requests I cannot fulfill
+
+**Acceptance Criteria:**
+- Rejection reason input (required)
+- Confirmation dialog
+- Display loading state during rejection
+- Update PO status to "rejected"
+- Show success message
+- Update PO list
+
+---
+
+### 2.7 Traveler Features
 
 **US-5.1: Traveler Home Page**
 - **As a** traveler

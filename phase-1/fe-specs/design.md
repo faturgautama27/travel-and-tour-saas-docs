@@ -163,9 +163,12 @@ src/
 │   │   │   │   ├── dashboard/
 │   │   │   │   ├── service-list/
 │   │   │   │   ├── service-form/
-│   │   │   │   └── service-detail/
+│   │   │   │   ├── service-detail/
+│   │   │   │   ├── po-list/
+│   │   │   │   └── po-detail/
 │   │   │   ├── services/
-│   │   │   │   └── service-api.service.ts
+│   │   │   │   ├── service-api.service.ts
+│   │   │   │   └── po-api.service.ts
 │   │   │   ├── models/
 │   │   │   │   └── service.model.ts
 │   │   │   └── supplier.routes.ts
@@ -176,15 +179,20 @@ src/
 │   │   │   │   ├── package-list/
 │   │   │   │   ├── package-form/
 │   │   │   │   ├── package-detail/
+│   │   │   │   ├── po-list/
+│   │   │   │   ├── po-form/
+│   │   │   │   ├── po-detail/
 │   │   │   │   ├── booking-list/
 │   │   │   │   ├── booking-detail/
 │   │   │   │   └── service-catalog/
 │   │   │   ├── services/
 │   │   │   │   ├── package-api.service.ts
-│   │   │   │   └── booking-api.service.ts
+│   │   │   │   ├── booking-api.service.ts
+│   │   │   │   └── po-api.service.ts
 │   │   │   ├── models/
 │   │   │   │   ├── package.model.ts
-│   │   │   │   └── booking.model.ts
+│   │   │   │   ├── booking.model.ts
+│   │   │   │   └── purchase-order.model.ts
 │   │   │   └── agency.routes.ts
 │   │   │
 │   │   └── traveler/                   # Traveler features
@@ -214,6 +222,7 @@ src/
 │   │   ├── supplier/
 │   │   ├── package/
 │   │   ├── booking/
+│   │   ├── purchase-order/
 │   │   └── index.ts                    # Root store config
 │   │
 │   ├── layouts/                        # Layout components
@@ -351,10 +360,12 @@ export class AppComponent {
 **Supplier**:
 - Dashboard
 - My Services
+- Purchase Orders
 
 **Agency Staff**:
 - Dashboard
 - Packages
+- Purchase Orders
 - Bookings
 - Service Catalog
 
@@ -833,7 +844,200 @@ getStatusSeverity(status: string): string {
 **PrimeNG Components**: `p-card`, `p-table`, `p-tag`, `p-button`, `p-dialog`, `p-textarea`
 
 
-### 4.7 Traveler Components
+### 4.7 Agency Purchase Order Components
+
+#### 4.7.1 Purchase Order List Component (Agency)
+
+**File**: `features/agency/components/po-list/po-list.component.ts`
+
+**Features**:
+- Data table with columns: PO Code, Supplier Name, Total Amount, Status, Created Date
+- Filter by status (pending, approved, rejected)
+- Filter by supplier
+- Search by PO code
+- Sort by columns
+- Quick actions: View Details
+- Create new PO button
+- Status badges with colors (pending=warning, approved=success, rejected=danger)
+
+**PrimeNG Components**: `p-table`, `p-button`, `p-inputtext`, `p-dropdown`, `p-tag`
+
+**Status Colors**:
+```typescript
+getStatusSeverity(status: string): string {
+  const severityMap = {
+    'pending': 'warning',
+    'approved': 'success',
+    'rejected': 'danger'
+  };
+  return severityMap[status] || 'info';
+}
+```
+
+#### 4.7.2 Purchase Order Form Component (Agency)
+
+**File**: `features/agency/components/po-form/po-form.component.ts`
+
+**Form Fields**:
+- Supplier Selection (dropdown, required)
+- PO Items (dynamic array):
+  - Service Selection (dropdown from supplier's services)
+  - Quantity (number, required)
+  - Unit Price (number, required, auto-filled from service)
+  - Total (calculated: quantity × unit price, read-only)
+- Total Amount (calculated sum of all items, read-only)
+
+**Features**:
+- Reactive form with validation
+- Dynamic PO items array (add/remove items)
+- Auto-calculate item totals and grand total
+- Loading state during creation
+- Success message with PO code
+- Redirect to PO list
+
+**PrimeNG Components**: `p-card`, `p-dropdown`, `p-inputnumber`, `p-button`, `p-table`
+
+**Calculation Logic**:
+```typescript
+calculateItemTotal(item: POItem): number {
+  return item.quantity * item.unit_price;
+}
+
+calculateGrandTotal(): number {
+  return this.poItems.reduce((sum, item) => sum + this.calculateItemTotal(item), 0);
+}
+```
+
+#### 4.7.3 Purchase Order Detail Component (Agency)
+
+**File**: `features/agency/components/po-detail/po-detail.component.ts`
+
+**Sections**:
+
+**PO Information**:
+- PO Code (prominent)
+- Supplier Name
+- Status (with color badge)
+- Created Date
+- Approved/Rejected Date (if applicable)
+
+**PO Items Table**:
+- Columns: Service Name, Quantity, Unit Price, Total
+- Display all items
+- Show grand total
+
+**Approval/Rejection Information** (if applicable):
+- Approval Date
+- Rejection Date and Reason
+
+**Actions**:
+- Create Package button (if status is approved)
+- Back to List button
+
+**Features**:
+- Display complete PO information
+- Conditional actions based on status
+- Navigate to package creation with PO context
+
+**PrimeNG Components**: `p-card`, `p-table`, `p-tag`, `p-button`
+
+
+### 4.8 Supplier Purchase Order Components
+
+#### 4.8.1 Purchase Order List Component (Supplier)
+
+**File**: `features/supplier/components/po-list/po-list.component.ts`
+
+**Features**:
+- Separate section for pending approvals (highlighted)
+- Data table with columns: PO Code, Agency Name, Total Amount, Status, Created Date
+- Filter by status (pending, approved, rejected)
+- Search by PO code or agency name
+- Sort by columns
+- Quick actions: View Details, Approve (if pending), Reject (if pending)
+- Status badges with colors
+
+**PrimeNG Components**: `p-table`, `p-button`, `p-inputtext`, `p-dropdown`, `p-tag`, `p-divider`
+
+#### 4.8.2 Purchase Order Detail Component (Supplier)
+
+**File**: `features/supplier/components/po-detail/po-detail.component.ts`
+
+**Sections**:
+
+**PO Information**:
+- PO Code
+- Agency Name
+- Status (with color badge)
+- Created Date
+
+**PO Items Table**:
+- Columns: Service Name, Quantity, Unit Price, Total
+- Display all items
+- Show grand total
+
+**Actions** (if status is pending):
+- Approve Button
+- Reject Button (with reason input)
+
+**Features**:
+- Display complete PO information
+- Approve/Reject actions with confirmation
+- Loading state during actions
+- Success/error messages
+
+**PrimeNG Components**: `p-card`, `p-table`, `p-tag`, `p-button`, `p-dialog`, `p-textarea`
+
+**Approval Logic**:
+```typescript
+approvePO() {
+  this.confirmationService.confirm({
+    message: 'Are you sure you want to approve this purchase order?',
+    header: 'Confirm Approval',
+    icon: 'pi pi-check-circle',
+    accept: () => {
+      this.poApiService.approvePO(this.poId).subscribe({
+        next: () => {
+          this.notificationService.showSuccess('Purchase order approved successfully');
+          this.router.navigate(['/supplier/purchase-orders']);
+        },
+        error: (err) => {
+          this.notificationService.showError('Failed to approve purchase order');
+        }
+      });
+    }
+  });
+}
+```
+
+**Rejection Logic**:
+```typescript
+rejectPO() {
+  // Show dialog to input rejection reason
+  this.showRejectDialog = true;
+}
+
+confirmReject() {
+  if (!this.rejectionReason) {
+    this.notificationService.showError('Please provide a rejection reason');
+    return;
+  }
+  
+  this.poApiService.rejectPO(this.poId, this.rejectionReason).subscribe({
+    next: () => {
+      this.notificationService.showSuccess('Purchase order rejected');
+      this.showRejectDialog = false;
+      this.router.navigate(['/supplier/purchase-orders']);
+    },
+    error: (err) => {
+      this.notificationService.showError('Failed to reject purchase order');
+    }
+  });
+}
+```
+
+
+### 4.9 Traveler Components
 
 #### 4.7.1 Traveler Home Component
 
@@ -1473,7 +1677,45 @@ export interface BookingActionDto {
 }
 ```
 
-### 5.5 Traveler Models
+**File**: `features/agency/models/purchase-order.model.ts`
+
+```typescript
+export interface PurchaseOrder {
+  id: string;
+  po_code: string;
+  agency_id: string;
+  supplier_id: string;
+  supplier_name?: string;
+  total_amount: number;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  approved_at?: string;
+  rejected_at?: string;
+  rejection_reason?: string;
+  items: POItem[];
+}
+
+export interface POItem {
+  id?: string;
+  supplier_service_id: string;
+  service_name?: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+}
+
+export interface CreatePurchaseOrderDto {
+  supplier_id: string;
+  items: Omit<POItem, 'id' | 'service_name'>[];
+}
+
+export interface POActionDto {
+  action: 'approve' | 'reject';
+  reason?: string;
+}
+```
+
+### 5.6 Traveler Models
 
 **File**: `features/traveler/models/package.model.ts`
 
@@ -1752,6 +1994,34 @@ export const initialPackageState: PackageState = {
 
 **Selectors**: Select packages list, selected package, loading state, error state
 
+### 6.3.1 Purchase Order Store (Example)
+
+**File**: `store/purchase-order/purchase-order.state.ts`
+
+```typescript
+import { PurchaseOrder } from '@features/agency/models/purchase-order.model';
+
+export interface PurchaseOrderState {
+  purchaseOrders: PurchaseOrder[];
+  selectedPO: PurchaseOrder | null;
+  loading: boolean;
+  error: string | null;
+}
+
+export const initialPurchaseOrderState: PurchaseOrderState = {
+  purchaseOrders: [],
+  selectedPO: null,
+  loading: false,
+  error: null
+};
+```
+
+**Actions**: Load POs, create PO, approve PO, reject PO, select PO
+
+**Effects**: Handle API calls for PO operations
+
+**Selectors**: Select POs list, selected PO, loading state, error state, pending POs
+
 ### 6.4 Root Store Configuration
 
 **File**: `store/index.ts`
@@ -1966,6 +2236,16 @@ export const SUPPLIER_ROUTES: Routes = [
     path: 'services/:id',
     loadComponent: () => import('./components/service-detail/service-detail.component')
       .then(m => m.ServiceDetailComponent)
+  },
+  {
+    path: 'purchase-orders',
+    loadComponent: () => import('./components/po-list/po-list.component')
+      .then(m => m.POListComponent)
+  },
+  {
+    path: 'purchase-orders/:id',
+    loadComponent: () => import('./components/po-detail/po-detail.component')
+      .then(m => m.PODetailComponent)
   }
 ];
 ```
@@ -2006,6 +2286,21 @@ export const AGENCY_ROUTES: Routes = [
     path: 'packages/:id',
     loadComponent: () => import('./components/package-detail/package-detail.component')
       .then(m => m.PackageDetailComponent)
+  },
+  {
+    path: 'purchase-orders',
+    loadComponent: () => import('./components/po-list/po-list.component')
+      .then(m => m.POListComponent)
+  },
+  {
+    path: 'purchase-orders/new',
+    loadComponent: () => import('./components/po-form/po-form.component')
+      .then(m => m.POFormComponent)
+  },
+  {
+    path: 'purchase-orders/:id',
+    loadComponent: () => import('./components/po-detail/po-detail.component')
+      .then(m => m.PODetailComponent)
   },
   {
     path: 'bookings',

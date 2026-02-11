@@ -83,6 +83,14 @@ DELETE /supplier/services/{id}
 PATCH  /supplier/services/{id}/publish
 ```
 
+### Purchase Orders
+```
+GET    /supplier/purchase-orders
+GET    /supplier/purchase-orders/{id}
+PATCH  /supplier/purchase-orders/{id}/approve
+PATCH  /supplier/purchase-orders/{id}/reject
+```
+
 ### Dashboard
 ```
 GET    /supplier/dashboard/stats
@@ -91,6 +99,13 @@ GET    /supplier/dashboard/stats
 ---
 
 ## Agency Endpoints
+
+### Purchase Orders
+```
+GET    /purchase-orders
+POST   /purchase-orders
+GET    /purchase-orders/{id}
+```
 
 ### Packages
 ```
@@ -279,6 +294,87 @@ Response 201:
     "name": "Umrah Premium March 2026",
     "status": "draft"
   }
+}
+```
+
+### Create Purchase Order (Agency)
+```http
+POST /v1/purchase-orders
+Authorization: Bearer {agency_token}
+X-Tenant-ID: {agency_id}
+Content-Type: application/json
+
+{
+  "supplier_id": "supplier-uuid",
+  "items": [
+    {
+      "supplier_service_id": "service-uuid-1",
+      "quantity": 10,
+      "unit_price": 500000
+    },
+    {
+      "supplier_service_id": "service-uuid-2",
+      "quantity": 2,
+      "unit_price": 3000000
+    }
+  ]
+}
+
+Response 201:
+{
+  "success": true,
+  "data": {
+    "id": "po-uuid",
+    "po_code": "PO-260211-001",
+    "supplier_id": "supplier-uuid",
+    "total_amount": 11000000,
+    "status": "pending",
+    "created_at": "2026-02-11T09:00:00Z"
+  }
+}
+```
+
+### Approve Purchase Order (Supplier)
+```http
+PATCH /v1/supplier/purchase-orders/{id}/approve
+Authorization: Bearer {supplier_token}
+X-Tenant-ID: {supplier_id}
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "id": "po-uuid",
+    "po_code": "PO-260211-001",
+    "status": "approved",
+    "approved_at": "2026-02-11T10:00:00Z"
+  },
+  "message": "Purchase order approved successfully"
+}
+```
+
+### Reject Purchase Order (Supplier)
+```http
+PATCH /v1/supplier/purchase-orders/{id}/reject
+Authorization: Bearer {supplier_token}
+X-Tenant-ID: {supplier_id}
+Content-Type: application/json
+
+{
+  "rejection_reason": "Service not available for requested dates"
+}
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "id": "po-uuid",
+    "po_code": "PO-260211-001",
+    "status": "rejected",
+    "rejected_at": "2026-02-11T10:00:00Z",
+    "rejection_reason": "Service not available for requested dates"
+  },
+  "message": "Purchase order rejected"
 }
 ```
 

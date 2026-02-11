@@ -212,7 +212,7 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
   - Ask the user if questions arise
 
 
-### Week 4: Supplier Module (Mar 4-10)
+### Week 4: Supplier Module & Purchase Order (Mar 4-10)
 
 - [ ] 15. Implement supplier service management commands
   - [ ] 15.1 Create CreateServiceCommand with handler and validator
@@ -268,16 +268,83 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
   - Add authorization filters for supplier role
   - _Requirements: 1.7_
 
-- [ ] 19. Checkpoint - Verify supplier module
+- [ ] 19. Implement Purchase Order management for suppliers
+  - [ ] 19.1 Create GetPurchaseOrdersQuery for supplier
+    - Return only POs where supplier is the recipient
+    - Support filtering by status (pending, approved, rejected)
+    - Support pagination
+    - Apply RLS policies automatically
+    - _Requirements: 26_
+
+  - [ ] 19.2 Create GetPurchaseOrderByIdQuery with authorization
+    - Verify supplier is the PO recipient
+    - Return complete PO details including items
+    - _Requirements: 26_
+
+  - [ ] 19.3 Create ApprovePurchaseOrderCommand
+    - Update PO status to "approved"
+    - Record approval timestamp
+    - _Requirements: 27_
+
+  - [ ] 19.4 Create RejectPurchaseOrderCommand
+    - Update PO status to "rejected"
+    - Record rejection reason and timestamp
+    - _Requirements: 27_
+
+  - [ ]* 19.5 Write property test for PO approval workflow
+    - **Property 51: Purchase Order Approval Workflow**
+    - **Validates: Requirements 27**
+
+  - [ ]* 19.6 Write property test for PO status enforcement
+    - **Property 52: Purchase Order Status Enforcement**
+    - **Validates: Requirements 27**
+
+- [ ] 20. Create Purchase Order API controllers
+  - Create PurchaseOrdersController for supplier with approval endpoints
+  - Add authorization filters for supplier role
+  - _Requirements: 1.7_
+
+- [ ] 21. Checkpoint - Verify supplier module with PO
   - Ensure service CRUD operations work correctly
   - Ensure publish/unpublish workflow functions properly
   - Ensure supplier can only access their own services
+  - Ensure supplier can view and manage POs
+  - Ensure PO approval/rejection works correctly
   - Ask the user if questions arise
 
-### Week 5: Agency Module - Package Management (Mar 11-17)
+### Week 5: Agency Module - Package Management & Purchase Order (Mar 11-17)
 
-- [ ] 20. Implement package management commands
-  - [ ] 20.1 Create CreatePackageCommand with handler and validator
+- [ ] 20. Implement Purchase Order creation for agency
+  - [ ] 20.1 Create CreatePurchaseOrderCommand with handler and validator
+    - Generate unique PO code
+    - Validate supplier ID and PO items
+    - Calculate total amount from items
+    - Set initial status to "pending"
+    - Associate PO with authenticated agency
+    - _Requirements: 25_
+
+  - [ ] 20.2 Create GetPurchaseOrdersQuery for agency
+    - Return only POs belonging to authenticated agency
+    - Support filtering by status (pending, approved, rejected)
+    - Support pagination
+    - Apply RLS policies automatically
+    - _Requirements: 28_
+
+  - [ ] 20.3 Create GetPurchaseOrderByIdQuery with authorization
+    - Verify agency owns the PO
+    - Return complete PO details including items
+    - _Requirements: 28_
+
+  - [ ]* 20.4 Write property test for PO total calculation
+    - **Property 53: Purchase Order Total Calculation**
+    - **Validates: Requirements 25**
+
+  - [ ]* 20.5 Write property test for PO-Package linking
+    - **Property 54: Package-Purchase Order Linking**
+    - **Validates: Requirements 29**
+
+- [ ] 21. Implement package management commands
+  - [ ] 21.1 Create CreatePackageCommand with handler and validator
     - Generate unique package code
     - Validate package type, name, duration, and pricing
     - Validate selling price >= base cost
@@ -285,46 +352,47 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
     - Calculate base cost from service costs
     - Apply markup (fixed or percentage) to calculate selling price
     - Associate package with authenticated agency
-    - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6_
+    - Link to approved PO if provided (approved_po_id)
+    - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 29_
 
-  - [ ]* 20.2 Write property test for package pricing calculation
+  - [ ]* 21.2 Write property test for package pricing calculation
     - **Property 22: Package Pricing Calculation**
     - **Validates: Requirements 9.5, 9.6**
 
-  - [ ]* 20.3 Write property test for package pricing constraint
+  - [ ]* 21.3 Write property test for package pricing constraint
     - **Property 23: Package Pricing Constraint**
     - **Validates: Requirements 9.3**
 
-  - [ ]* 20.4 Write property test for package service relationship
+  - [ ]* 21.4 Write property test for package service relationship
     - **Property 24: Package Service Relationship**
     - **Validates: Requirements 9.4**
 
-  - [ ] 20.5 Create UpdatePackageCommand with validation
+  - [ ] 21.5 Create UpdatePackageCommand with validation
     - Validate changes before updating
     - Recalculate pricing if services or markup changed
     - _Requirements: 9.8_
 
-  - [ ] 20.6 Create PublishPackageCommand with visibility control
+  - [ ] 21.6 Create PublishPackageCommand with visibility control
     - Update package status to "published"
     - Set visibility to "public" or "private"
     - Record published_at timestamp
     - _Requirements: 9.9_
 
-  - [ ] 20.7 Create DeletePackageCommand with constraint checking
+  - [ ] 21.7 Create DeletePackageCommand with constraint checking
     - Prevent deletion if package has confirmed bookings
     - Return conflict error if deletion not allowed
     - _Requirements: 9.10_
 
-  - [ ]* 20.8 Write property test for package visibility workflow
+  - [ ]* 21.8 Write property test for package visibility workflow
     - **Property 25: Package Visibility Workflow**
     - **Validates: Requirements 9.9, 13.1**
 
-  - [ ]* 20.9 Write property test for referential integrity protection
+  - [ ]* 21.9 Write property test for referential integrity protection
     - **Property 38: Referential Integrity Protection**
     - **Validates: Requirements 3.7, 6.8, 9.10, 10.7**
 
-- [ ] 21. Implement package queries
-  - [ ] 21.1 Create GetPackagesQuery for agency (my packages)
+- [ ] 22. Implement package queries
+  - [ ] 22.1 Create GetPackagesQuery for agency (my packages)
     - Return only packages belonging to authenticated agency
     - Support pagination, filtering by type and status
     - Apply RLS policies automatically
@@ -359,93 +427,97 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
     - **Property 14: Search Correctness**
     - **Validates: Requirements 8.3, 11.3, 13.3**
 
-- [ ] 23. Create package API controllers
+- [ ] 23. Create package and PO API controllers
   - Create PackagesController with CRUD endpoints
+  - Create PurchaseOrdersController (agency view) for creating and viewing POs
   - Create SupplierServicesController (agency view) for browsing marketplace
   - Add authorization filters for agency staff role
   - Add tenant context validation
   - _Requirements: 1.6, 1.7_
 
-- [ ] 24. Checkpoint - Verify package management
+- [ ] 24. Checkpoint - Verify package management and PO
+  - Ensure PO creation works correctly
+  - Ensure PO listing and detail views work
   - Ensure package CRUD operations work correctly
   - Ensure pricing calculations are accurate
-  - Ensure agencies can only access their own packages
+  - Ensure agencies can only access their own packages and POs
   - Ensure agencies can browse marketplace services
+  - Ensure package can be linked to approved PO
   - Ask the user if questions arise
 
 
 ### Week 6: Agency Module - Booking Management (Mar 18-24)
 
-- [ ] 25. Implement package departure management
-  - [ ] 25.1 Create CreateDepartureCommand with handler and validator
+- [ ] 26. Implement package departure management
+  - [ ] 26.1 Create CreateDepartureCommand with handler and validator
     - Generate unique departure code
     - Validate departure date, return date, and total quota
     - Initialize available quota equal to total quota
     - Associate departure with package
     - _Requirements: 10.1, 10.2, 10.3_
 
-  - [ ] 25.2 Create UpdateDepartureCommand with quota validation
+  - [ ] 26.2 Create UpdateDepartureCommand with quota validation
     - Validate available quota does not exceed total quota
     - Prevent invalid quota updates
     - _Requirements: 10.6_
 
-  - [ ] 25.3 Create DeleteDepartureCommand with constraint checking
+  - [ ] 26.3 Create DeleteDepartureCommand with constraint checking
     - Prevent deletion if departure has confirmed bookings
     - Return conflict error if deletion not allowed
     - _Requirements: 10.7_
 
-  - [ ]* 25.4 Write property test for departure quota initialization
+  - [ ]* 26.4 Write property test for departure quota initialization
     - **Property 26: Departure Quota Initialization**
     - **Validates: Requirements 10.3**
 
-  - [ ]* 25.5 Write property test for departure quota invariant
+  - [ ]* 26.5 Write property test for departure quota invariant
     - **Property 27: Departure Quota Invariant**
     - **Validates: Requirements 10.6**
 
-- [ ] 26. Implement booking approval workflow
-  - [ ] 26.1 Create ApproveBookingCommand with quota management
+- [ ] 27. Implement booking approval workflow
+  - [ ] 27.1 Create ApproveBookingCommand with quota management
     - Update booking status to "approved"
     - Decrement departure available quota by traveler count
     - Validate sufficient quota available before approval
     - Record approval timestamp and approver
     - _Requirements: 11.5, 11.9_
 
-  - [ ] 26.2 Create RejectBookingCommand
+  - [ ] 27.2 Create RejectBookingCommand
     - Update booking status to "rejected"
     - Do not affect departure quota
     - _Requirements: 11.6_
 
-  - [ ] 26.3 Create CancelBookingCommand with quota restoration
+  - [ ] 27.3 Create CancelBookingCommand with quota restoration
     - Update booking status to "cancelled"
     - Increment departure available quota by traveler count
     - _Requirements: 11.7_
 
-  - [ ]* 26.4 Write property test for booking approval quota decrement
+  - [ ]* 27.4 Write property test for booking approval quota decrement
     - **Property 28: Booking Approval Quota Decrement**
     - **Validates: Requirements 10.4, 11.5**
 
-  - [ ]* 26.5 Write property test for booking cancellation quota increment
+  - [ ]* 27.5 Write property test for booking cancellation quota increment
     - **Property 29: Booking Cancellation Quota Increment**
     - **Validates: Requirements 10.5, 11.7**
 
-  - [ ]* 26.6 Write property test for quota management round trip
+  - [ ]* 27.6 Write property test for quota management round trip
     - **Property 30: Quota Management Round Trip**
     - **Validates: Requirements 10.4, 10.5**
 
-  - [ ]* 26.7 Write property test for insufficient quota prevention
+  - [ ]* 27.7 Write property test for insufficient quota prevention
     - **Property 31: Insufficient Quota Prevention**
     - **Validates: Requirements 11.9, 14.4**
 
-  - [ ]* 26.8 Write property test for booking status workflow
+  - [ ]* 27.8 Write property test for booking status workflow
     - **Property 32: Booking Status Workflow**
     - **Validates: Requirements 11.5, 11.6, 14.6**
 
-  - [ ]* 26.9 Write property test for booking rejection quota preservation
+  - [ ]* 27.9 Write property test for booking rejection quota preservation
     - **Property 34: Booking Rejection Quota Preservation**
     - **Validates: Requirements 11.6**
 
-- [ ] 27. Implement booking queries for agency
-  - [ ] 27.1 Create GetBookingsQuery with filtering and search
+- [ ] 28. Implement booking queries for agency
+  - [ ] 28.1 Create GetBookingsQuery with filtering and search
     - Return only bookings belonging to authenticated agency
     - Support filtering by status
     - Support searching by booking reference or customer name
@@ -453,29 +525,29 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
     - Apply RLS policies automatically
     - _Requirements: 11.1, 11.2, 11.3_
 
-  - [ ] 27.2 Create GetBookingByIdQuery with authorization
+  - [ ] 28.2 Create GetBookingByIdQuery with authorization
     - Verify agency owns the booking
     - Return complete booking details including traveler list
     - _Requirements: 11.4_
 
-  - [ ] 27.3 Create GetPendingBookingsQuery
+  - [ ] 28.3 Create GetPendingBookingsQuery
     - Return bookings with status "pending" for approval
     - Support pagination
     - _Requirements: 11.2_
 
-- [ ] 28. Implement manual booking creation for agency
-  - [ ] 28.1 Create CreateManualBookingCommand
+- [ ] 29. Implement manual booking creation for agency
+  - [ ] 29.1 Create CreateManualBookingCommand
     - Create booking with status "approved" (auto-approve)
     - Decrement departure quota immediately
     - Create traveler records
     - Calculate total amount
     - _Requirements: 11.8_
 
-  - [ ]* 28.2 Write property test for manual booking auto-approval
+  - [ ]* 29.2 Write property test for manual booking auto-approval
     - **Property 33: Manual Booking Auto-Approval**
     - **Validates: Requirements 11.8**
 
-- [ ] 29. Implement agency dashboard statistics
+- [ ] 30. Implement agency dashboard statistics
   - Create GetAgencyDashboardStatsQuery
   - Return count of pending bookings
   - Return count of confirmed bookings
@@ -483,7 +555,7 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
   - Return count of upcoming departures
   - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
 
-- [ ] 30. Create booking API controllers
+- [ ] 31. Create booking API controllers
   - Create BookingsController with approval/rejection/cancellation endpoints
   - Create DeparturesController for package departure management
   - Create AgencyDashboardController with statistics endpoint
@@ -491,7 +563,7 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
   - Add tenant context validation
   - _Requirements: 1.6, 1.7_
 
-- [ ] 31. Checkpoint - Verify booking management
+- [ ] 32. Checkpoint - Verify booking management
   - Ensure booking approval/rejection/cancellation work correctly
   - Ensure quota management functions properly
   - Ensure agencies can only access their own bookings
@@ -499,8 +571,8 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
 
 ### Week 7: Traveler Module (Mar 25-31)
 
-- [ ] 32. Implement traveler browse packages
-  - [ ] 32.1 Create GetPublicPackagesQuery
+- [ ] 33. Implement traveler browse packages
+  - [ ] 33.1 Create GetPublicPackagesQuery
     - Return only published packages with visibility "public"
     - Support filtering by package type
     - Support searching by name
@@ -509,17 +581,17 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
     - Support pagination
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.7_
 
-  - [ ] 32.2 Create GetPublicPackageByIdQuery
+  - [ ] 33.2 Create GetPublicPackageByIdQuery
     - Return complete package details including services and available departures
     - Only return published packages
     - _Requirements: 13.6_
 
-  - [ ]* 32.3 Write property test for sorting correctness
+  - [ ]* 33.3 Write property test for sorting correctness
     - **Property 15: Sorting Correctness**
     - **Validates: Requirements 13.5**
 
-- [ ] 33. Implement traveler booking creation
-  - [ ] 33.1 Create CreateBookingCommand with validation
+- [ ] 34. Implement traveler booking creation
+  - [ ] 34.1 Create CreateBookingCommand with validation
     - Generate unique booking reference
     - Validate package ID, departure ID, and customer details
     - Validate at least one traveler provided
@@ -530,36 +602,36 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
     - Validate mahram relationship for female travelers
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.6, 14.7, 14.8, 14.9_
 
-  - [ ]* 33.2 Write property test for booking amount calculation
+  - [ ]* 34.2 Write property test for booking amount calculation
     - **Property 35: Booking Amount Calculation**
     - **Validates: Requirements 14.7**
 
-  - [ ]* 33.3 Write property test for traveler record completeness
+  - [ ]* 34.3 Write property test for traveler record completeness
     - **Property 36: Traveler Record Completeness**
     - **Validates: Requirements 14.5**
 
-  - [ ]* 33.4 Write property test for mahram relationship validation
+  - [ ]* 34.4 Write property test for mahram relationship validation
     - **Property 37: Mahram Relationship Validation**
     - **Validates: Requirements 14.8, 14.9**
 
-- [ ] 34. Implement traveler booking queries
-  - [ ] 34.1 Create GetMyBookingsQuery
+- [ ] 35. Implement traveler booking queries
+  - [ ] 35.1 Create GetMyBookingsQuery
     - Return only bookings created by authenticated traveler
     - Support pagination
     - _Requirements: 15.1, 15.3_
 
-  - [ ] 34.2 Create GetMyBookingByIdQuery
+  - [ ] 35.2 Create GetMyBookingByIdQuery
     - Return complete booking details including package and traveler list
     - Verify traveler owns the booking
     - _Requirements: 15.2_
 
-- [ ] 35. Create traveler API controllers
+- [ ] 36. Create traveler API controllers
   - Create TravelerPackagesController for browsing public packages
   - Create TravelerBookingsController for creating and viewing bookings
   - Add authorization filters for customer role
   - _Requirements: 1.7_
 
-- [ ] 36. Checkpoint - Verify traveler module
+- [ ] 37. Checkpoint - Verify traveler module
   - Ensure travelers can browse public packages
   - Ensure travelers can create bookings with validation
   - Ensure travelers can only view their own bookings
@@ -568,32 +640,32 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
 
 ### Week 8: API Documentation, Validation, and Bug Fixes (Apr 1-7)
 
-- [ ] 37. Implement comprehensive data validation
-  - [ ] 37.1 Create FluentValidation validators for all commands
+- [ ] 38. Implement comprehensive data validation
+  - [ ] 38.1 Create FluentValidation validators for all commands
     - Validate email format for all email fields
     - Validate numeric fields are within acceptable ranges
     - Validate date fields and logical date ranges
     - Validate foreign key references exist
     - _Requirements: 16.1, 16.2, 16.3, 16.4, 16.5, 16.7_
 
-  - [ ]* 37.2 Write property test for email format validation
+  - [ ]* 38.2 Write property test for email format validation
     - **Property 39: Email Format Validation**
     - **Validates: Requirements 16.3**
 
-  - [ ]* 37.3 Write property test for numeric range validation
+  - [ ]* 38.3 Write property test for numeric range validation
     - **Property 40: Numeric Range Validation**
     - **Validates: Requirements 16.4**
 
-  - [ ]* 37.4 Write property test for date range validation
+  - [ ]* 38.4 Write property test for date range validation
     - **Property 41: Date Range Validation**
     - **Validates: Requirements 16.5**
 
-  - [ ]* 37.5 Write property test for foreign key validation
+  - [ ]* 38.5 Write property test for foreign key validation
     - **Property 42: Foreign Key Validation**
     - **Validates: Requirements 16.7**
 
-- [ ] 38. Implement API response format consistency
-  - [ ] 38.1 Ensure all endpoints return consistent response format
+- [ ] 39. Implement API response format consistency
+  - [ ] 39.1 Ensure all endpoints return consistent response format
     - Successful responses with success=true and data object
     - Failed responses with success=false and error object
     - Include pagination metadata for list endpoints
@@ -601,24 +673,24 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
     - Return JSON content type for all responses
     - _Requirements: 18.1, 18.2, 18.3, 18.4, 18.5_
 
-  - [ ]* 38.2 Write property test for API response format consistency
+  - [ ]* 39.2 Write property test for API response format consistency
     - **Property 43: API Response Format Consistency**
     - **Validates: Requirements 18.1, 18.2**
 
-  - [ ]* 38.3 Write property test for HTTP status code correctness
+  - [ ]* 39.3 Write property test for HTTP status code correctness
     - **Property 44: HTTP Status Code Correctness**
     - **Validates: Requirements 18.4**
 
-  - [ ]* 38.4 Write property test for pagination metadata presence
+  - [ ]* 39.4 Write property test for pagination metadata presence
     - **Property 45: Pagination Metadata Presence**
     - **Validates: Requirements 18.3**
 
-  - [ ]* 38.5 Write property test for JSON content type
+  - [ ]* 39.5 Write property test for JSON content type
     - **Property 46: JSON Content Type**
     - **Validates: Requirements 18.5**
 
-- [ ] 39. Implement Swagger/OpenAPI documentation
-  - [ ] 39.1 Configure Swashbuckle for API documentation
+- [ ] 40. Implement Swagger/OpenAPI documentation
+  - [ ] 40.1 Configure Swashbuckle for API documentation
     - Expose Swagger UI at /swagger endpoint
     - Include all endpoints with request/response schemas
     - Document authentication requirements
@@ -626,38 +698,38 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
     - Enable interactive testing
     - _Requirements: 21.1, 21.2, 21.3, 21.4, 21.5_
 
-  - [ ] 39.2 Add XML documentation comments to controllers and DTOs
+  - [ ] 40.2 Add XML documentation comments to controllers and DTOs
     - Document all public APIs with summary and remarks
     - Document all parameters and return types
     - Include example values for complex types
 
-- [ ] 40. Implement health check endpoint
+- [ ] 41. Implement health check endpoint
   - Create health check endpoint at /health
   - Verify database connectivity
   - Return 200 with healthy status on success
   - Return 503 with unhealthy status on failure
   - _Requirements: 22.1, 22.2, 22.3, 22.4_
 
-- [ ] 41. Implement role-based authorization
-  - [ ] 41.1 Create authorization policies for each role
+- [ ] 42. Implement role-based authorization
+  - [ ] 42.1 Create authorization policies for each role
     - Platform admin policy
     - Agency staff policy
     - Supplier policy
     - Customer policy
     - _Requirements: 1.7_
 
-  - [ ]* 41.2 Write property test for role-based authorization
+  - [ ]* 42.2 Write property test for role-based authorization
     - **Property 5: Role-Based Authorization**
     - **Validates: Requirements 1.7**
 
-- [ ] 42. Bug fixes and refinements
+- [ ] 43. Bug fixes and refinements
   - Review all endpoints for edge cases
   - Fix any validation issues discovered during testing
   - Optimize database queries for performance
   - Ensure all error messages are clear and helpful
   - _Requirements: All_
 
-- [ ] 43. Checkpoint - Verify API completeness
+- [ ] 44. Checkpoint - Verify API completeness
   - Ensure all endpoints are documented in Swagger
   - Ensure all validation rules are enforced
   - Ensure health check endpoint works correctly
@@ -665,14 +737,14 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
 
 ### Week 9: Property-Based Testing and Integration Testing (Apr 8-14)
 
-- [ ] 44. Set up property-based testing infrastructure
-  - [ ] 44.1 Install and configure FsCheck for .NET
+- [ ] 45. Set up property-based testing infrastructure
+  - [ ] 45.1 Install and configure FsCheck for .NET
     - Add FsCheck NuGet package
     - Configure test project for property-based tests
     - Create custom generators for domain entities
     - _Requirements: All correctness properties_
 
-  - [ ] 44.2 Create generators for all domain entities
+  - [ ] 45.2 Create generators for all domain entities
     - User generator with valid/invalid credentials
     - Agency generator with various statuses
     - Supplier generator with various statuses
@@ -681,46 +753,49 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
     - Departure generator with quota management
     - Booking generator with travelers
     - Traveler generator with mahram relationships
+    - Purchase Order generator with items
 
-- [ ] 45. Implement remaining property-based tests
-  - [ ]* 45.1 Write property test for request logging completeness
+- [ ] 46. Implement remaining property-based tests
+  - [ ]* 46.1 Write property test for request logging completeness
     - **Property 48: Request Logging Completeness**
     - **Validates: Requirements 17.3**
 
-  - [ ]* 45.2 Write property test for seed data idempotency
+  - [ ]* 46.2 Write property test for seed data idempotency
     - **Property 50: Seed Data Idempotency**
     - **Validates: Requirements 24.3**
 
-- [ ] 46. Set up integration testing with Testcontainers
-  - [ ] 46.1 Configure Testcontainers for PostgreSQL
+- [ ] 47. Set up integration testing with Testcontainers
+  - [ ] 47.1 Configure Testcontainers for PostgreSQL
     - Create IntegrationTestBase class
     - Start PostgreSQL container before tests
     - Apply migrations to test database
     - Dispose container after tests
     - _Requirements: All_
 
-  - [ ] 46.2 Write integration tests for critical workflows
+  - [ ] 47.2 Write integration tests for critical workflows
     - Test package creation with services
     - Test booking creation with travelers
     - Test booking approval with quota decrement
     - Test booking cancellation with quota increment
     - Test multi-tenant data isolation
     - Test RLS policies enforcement
+    - Test PO creation and approval workflow
 
-- [ ] 47. Set up end-to-end testing with WebApplicationFactory
-  - [ ] 47.1 Create E2E test infrastructure
+- [ ] 48. Set up end-to-end testing with WebApplicationFactory
+  - [ ] 48.1 Create E2E test infrastructure
     - Configure WebApplicationFactory
     - Create test HTTP client
     - Implement authentication helper methods
     - _Requirements: All_
 
-  - [ ] 47.2 Write E2E tests for user journeys
+  - [ ] 48.2 Write E2E tests for user journeys
     - Test traveler booking flow (browse → create booking → view booking)
     - Test agency approval flow (view pending → approve → verify quota)
     - Test supplier service flow (create → publish → verify visibility)
     - Test platform admin flow (create agency → approve supplier)
+    - Test agency PO flow (create PO → supplier approves → create package from PO)
 
-- [ ] 48. Run all tests and verify coverage
+- [ ] 49. Run all tests and verify coverage
   - Execute all unit tests
   - Execute all property-based tests (100 iterations each)
   - Execute all integration tests
@@ -729,7 +804,7 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
   - Ensure coverage >= 80%
   - _Requirements: All_
 
-- [ ] 49. Checkpoint - Verify testing completeness
+- [ ] 50. Checkpoint - Verify testing completeness
   - Ensure all property tests pass
   - Ensure all integration tests pass
   - Ensure all E2E tests pass
@@ -738,8 +813,8 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
 
 ### Week 10: Docker Setup, Deployment, and Documentation (Apr 15-26)
 
-- [ ] 50. Create Docker configuration
-  - [ ] 50.1 Create multi-stage Dockerfile
+- [ ] 51. Create Docker configuration
+  - [ ] 51.1 Create multi-stage Dockerfile
     - Build stage with .NET SDK
     - Publish stage for optimized build
     - Runtime stage with ASP.NET runtime
@@ -747,7 +822,7 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
     - Add health check configuration
     - _Requirements: 20.1_
 
-  - [ ] 50.2 Create Docker Compose configuration
+  - [ ] 51.2 Create Docker Compose configuration
     - Configure PostgreSQL service with persistent volume
     - Configure API service with environment variables
     - Configure health checks for both services
@@ -755,13 +830,13 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
     - Add PgAdmin service for development (optional profile)
     - _Requirements: 20.2, 20.3, 20.4, 20.5_
 
-  - [ ] 50.3 Create database initialization script
+  - [ ] 51.3 Create database initialization script
     - Enable UUID and pg_trgm extensions
     - Create custom PostgreSQL types (enums)
     - Configure PostgreSQL performance settings
     - _Requirements: 20.3_
 
-  - [ ] 50.4 Create environment variables configuration
+  - [ ] 51.4 Create environment variables configuration
     - Database connection settings
     - JWT configuration (secret, issuer, audience, expiry)
     - Logging configuration
@@ -770,23 +845,24 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
     - Feature flags
     - _Requirements: 20.6_
 
-- [ ] 51. Test Docker deployment
-  - [ ] 51.1 Build and start Docker containers
+- [ ] 52. Test Docker deployment
+  - [ ] 52.1 Build and start Docker containers
     - Build API Docker image
     - Start PostgreSQL and API containers
     - Verify containers are healthy
     - Verify API can connect to database
     - _Requirements: 20.2, 20.3, 20.5_
 
-  - [ ] 51.2 Test API endpoints in Docker environment
+  - [ ] 52.2 Test API endpoints in Docker environment
     - Test authentication endpoints
     - Test CRUD operations for all modules
     - Test multi-tenancy isolation
     - Test health check endpoint
     - Verify Swagger documentation is accessible
+    - Test PO endpoints
 
-- [ ] 52. Create deployment documentation
-  - [ ] 52.1 Write README.md with setup instructions
+- [ ] 53. Create deployment documentation
+  - [ ] 53.1 Write README.md with setup instructions
     - Prerequisites (Docker, .NET SDK)
     - Local development setup
     - Docker deployment instructions
@@ -794,38 +870,39 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
     - API endpoint documentation
     - Testing instructions
 
-  - [ ] 52.2 Write API integration guide for frontend
+  - [ ] 53.2 Write API integration guide for frontend
     - Authentication flow
     - API endpoint reference
     - Request/response examples
     - Error handling guide
     - Multi-tenancy header requirements
+    - Purchase Order workflow
 
-  - [ ] 52.3 Write database migration guide
+  - [ ] 53.3 Write database migration guide
     - How to create new migrations
     - How to apply migrations
     - How to rollback migrations
     - Seed data management
 
-- [ ] 53. Performance optimization
-  - [ ] 53.1 Add database indexes for frequently queried fields
+- [ ] 54. Performance optimization
+  - [ ] 54.1 Add database indexes for frequently queried fields
     - Review query patterns
     - Add missing indexes
     - Verify index usage with EXPLAIN
     - _Requirements: 19.1_
 
-  - [ ] 53.2 Optimize database queries
+  - [ ] 54.2 Optimize database queries
     - Use efficient joins to minimize round trips
     - Use read-only connections for queries
     - Implement connection pooling
     - _Requirements: 19.2, 19.4, 19.5_
 
-  - [ ] 53.3 Configure pagination limits
+  - [ ] 54.3 Configure pagination limits
     - Set default page size to 20
     - Set maximum page size to 100
     - _Requirements: 19.3_
 
-- [ ] 54. Security hardening
+- [ ] 55. Security hardening
   - Review all endpoints for authorization
   - Ensure sensitive data is not logged
   - Validate all user inputs
@@ -834,14 +911,15 @@ This implementation plan covers the development of the Tour & Travel ERP SaaS ba
   - Rotate JWT secrets regularly
   - _Requirements: 17.6_
 
-- [ ] 55. Final integration testing with frontend
+- [ ] 56. Final integration testing with frontend
   - Coordinate with frontend team for integration testing
   - Test all API endpoints with frontend application
   - Verify authentication flow works end-to-end
   - Verify multi-tenancy works correctly
+  - Verify PO workflow works end-to-end
   - Fix any integration issues discovered
 
-- [ ] 56. Final checkpoint - Production readiness
+- [ ] 57. Final checkpoint - Production readiness
   - Ensure all tests pass
   - Ensure Docker deployment works correctly
   - Ensure documentation is complete
