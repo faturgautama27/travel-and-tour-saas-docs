@@ -4,13 +4,26 @@
 
 **Focus:** Umrah, Hajj, Tour Packages
 
-**Tech Stack:** Angular (FE) + .NET 8 (BE) + PostgreSQL
+**Tech Stack:** Angular 20 + .NET 8 + PostgreSQL 16
 
 **Date:** February 2026
 
 **Version:** 2.0
 
 **MVP Demo Target:** April 26, 2026
+
+**🚨 Go Live Target:** June 16, 2026
+
+---
+
+## 📍 Navigation
+
+**Quick Links:**
+- 🏠 [Back to README](README.md)
+- 📋 [Documentation Summary](DOCUMENTATION-SUMMARY.md)
+- ⏰ [Timeline & Scope Changes](TIMELINE-ADJUSTMENT.md)
+- 🚀 [Phase 1 Implementation Guide](phase-1/PHASE-1-COMPLETE-DOCUMENTATION.md)
+- ✅ [Phase 1 Features Checklist](phase-1/PHASE-1-FEATURES-RECAP.md)
 
 ---
 
