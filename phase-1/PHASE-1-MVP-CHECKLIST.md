@@ -1,8 +1,10 @@
 # Phase 1 MVP - Development Checklist
 
+**Start Date:** February 16, 2026
+
 **Target Demo:** April 26, 2026 (10 weeks)
 
-**Demo Scope:** User dapat booking transaksi + Supplier dapat create service
+**Demo Scope:** User dapat booking transaksi + Supplier dapat create service + Purchase Order workflow
 
 ---
 
@@ -72,7 +74,33 @@
 
 ---
 
-## Week 5-6: Booking Flow
+## Week 5-6: Purchase Orders & Booking Flow
+
+### Purchase Order Backend
+- [ ] Purchase orders table creation
+- [ ] PO items table creation
+- [ ] Create PO endpoint (Agency)
+- [ ] List POs endpoint (Agency & Supplier)
+- [ ] Get PO detail endpoint
+- [ ] Approve PO endpoint (Supplier)
+- [ ] Reject PO endpoint (Supplier)
+- [ ] PO validation logic
+
+### Purchase Order Frontend (Agency)
+- [ ] PO list page
+- [ ] PO create form
+- [ ] PO detail page
+- [ ] Link to package creation from approved PO
+
+### Purchase Order Frontend (Supplier)
+- [ ] PO list page (with pending section)
+- [ ] PO detail page
+- [ ] Approve/reject actions
+
+### Package Creation Update
+- [ ] Update package creation to support PO linking
+- [ ] Pre-fill services from approved PO
+- [ ] Display PO code in package details
 
 ### Traveler Portal Backend
 - [ ] Browse packages endpoint (with search/filter)
@@ -138,7 +166,9 @@
 - [ ] End-to-end flow testing (happy path)
   - Platform admin creates agency
   - Supplier creates service
-  - Agency creates package
+  - Agency creates PO to supplier
+  - Supplier approves PO
+  - Agency creates package from approved PO
   - Customer creates booking
   - Agency approves booking
 - [ ] Cross-browser testing (Chrome, Firefox, Safari)

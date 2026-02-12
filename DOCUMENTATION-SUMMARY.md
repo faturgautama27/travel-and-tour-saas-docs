@@ -1,6 +1,6 @@
 # Tour & Travel ERP SaaS - Documentation Summary
 
-**Date:** February 11, 2026
+**Date:** February 16, 2026
 
 **Version:** 2.0
 
@@ -86,7 +86,7 @@
 
 ## 📅 Timeline & Phases
 
-### Phase 1 - MVP Demo (Feb 11 - Apr 26, 2026) ⭐
+### Phase 1 - MVP Demo (Feb 16 - Apr 26, 2026) ⭐
 **Duration:** 10 weeks
 
 **Goal:** Proof of concept for demo
@@ -95,7 +95,8 @@
 - Multi-role authentication
 - Agency onboarding (basic)
 - Supplier service creation
-- Package creation (basic)
+- Purchase Order workflow (Agency → Supplier approval)
+- Package creation (from PO or direct catalog)
 - Booking flow (browse → book → approve)
 - Basic dashboards
 
@@ -135,7 +136,6 @@
 **Goal:** Essential ERP features for go live
 
 **Scope:**
-- Procurement & Purchase Orders (basic)
 - Operations & Task Management (simple Kanban)
 - Supplier Bills & Payables
 - Manual Settlement Engine

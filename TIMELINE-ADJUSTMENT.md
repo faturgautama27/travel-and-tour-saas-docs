@@ -1,6 +1,6 @@
 # Timeline Adjustment - Go Live June 16, 2026
 
-**Document Date:** February 11, 2026
+**Document Date:** February 16, 2026
 
 **Critical Change:** Go Live target moved from September 30, 2026 to **June 16, 2026**
 
@@ -11,7 +11,7 @@
 ### Original Timeline (30 weeks)
 | Phase | Duration | Start Date | End Date | Status |
 |-------|----------|------------|----------|--------|
-| Phase 1 | 10 weeks | Feb 11, 2026 | Apr 26, 2026 | Demo |
+| Phase 1 | 10 weeks | Feb 16, 2026 | Apr 26, 2026 | Demo |
 | Phase 2 | 8 weeks | May 1, 2026 | Jun 30, 2026 | Production MVP |
 | Phase 3 | 12 weeks | Jul 1, 2026 | Sep 30, 2026 | Full ERP |
 | **Total** | **30 weeks** | | | ❌ Too long |
@@ -19,7 +19,7 @@
 ### New Timeline (17 weeks) ⚡
 | Phase | Duration | Start Date | End Date | Status |
 |-------|----------|------------|----------|--------|
-| Phase 1 | 10 weeks | Feb 11, 2026 | Apr 26, 2026 | Demo (unchanged) |
+| Phase 1 | 10 weeks | Feb 16, 2026 | Apr 26, 2026 | Demo (with PO) |
 | Phase 2 | 4 weeks | Apr 27, 2026 | May 24, 2026 | Production MVP (compressed) |
 | Phase 3 | 3 weeks | May 25, 2026 | Jun 16, 2026 | Go Live (compressed) |
 | **Total** | **17 weeks** | | **Jun 16, 2026** | ✅ On target |
@@ -30,17 +30,18 @@
 
 ## 📊 Detailed New Timeline
 
-### Phase 1: MVP Demo (10 weeks) ✅ UNCHANGED
-**Duration:** Feb 11 - Apr 26, 2026 (10 weeks)
+### Phase 1: MVP Demo (10 weeks) ✅ UPDATED
+**Duration:** Feb 16 - Apr 26, 2026 (10 weeks)
 
-**Goal:** Functional booking flow demo
+**Goal:** Functional booking flow demo + Purchase Order workflow
 
-**Scope:** (No changes)
+**Scope:** (Updated with PO)
 - Multi-role authentication
 - Platform Admin portal
-- Supplier portal (service management)
-- Agency portal (package & booking management)
+- Supplier portal (service management + PO approval)
+- Agency portal (PO creation + package & booking management)
 - Traveler portal (browse & book)
+- Purchase Order workflow (Agency → Supplier approval → Package creation)
 - Basic dashboards
 
 **Demo Date:** April 26, 2026 ✅
@@ -124,16 +125,14 @@
 
 **Goal:** Essential ERP features for go live
 
-#### Week 1 (May 25 - May 31): Procurement & Operations
+#### Week 1 (May 25 - May 31): Operations
 **Priority:** CRITICAL
-- [ ] Purchase Order workflow (basic)
-- [ ] PO tracking
 - [ ] Task management (simple Kanban)
 - [ ] Task assignment
 - [ ] Checklist per booking stage
+- [ ] Booking stage workflow automation
 
 **Scope Reduction:**
-- ❌ Skip: PO approval workflow (simplified)
 - ❌ Skip: Supplier contract management (move to Phase 4)
 - ❌ Skip: Rate card management (move to Phase 4)
 - ❌ Skip: Tour leader assignment (move to Phase 4)
@@ -178,7 +177,6 @@
 - ❌ Skip: Dashboard customization (move to Phase 4)
 
 **Phase 3 Deliverables:**
-- ✅ Basic PO workflow
 - ✅ Task management
 - ✅ Supplier bills & payables
 - ✅ Manual settlement
@@ -379,7 +377,7 @@
 
 **Prepared By:** Development Team
 
-**Date:** February 11, 2026
+**Date:** February 16, 2026
 
 **Status:** ⚠️ **PENDING APPROVAL**
 

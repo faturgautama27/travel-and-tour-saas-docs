@@ -92,11 +92,11 @@
 
 ### 🎯 MVP Demo Target: April 26, 2026
 
-**Total Development Time:** 10 weeks (Feb 11 - Apr 26, 2026)
+**Total Development Time:** 10 weeks (Feb 16 - Apr 26, 2026)
 
 ---
 
-### **PHASE 1 - MVP Demo (Feb 11 - Apr 26, 2026)** ⭐
+### **PHASE 1 - MVP Demo (Feb 16 - Apr 26, 2026)** ⭐
 
 **Duration:** 10 weeks
 
@@ -274,7 +274,6 @@
 - Audit trail (basic)
 
 **❌ Deferred to Phase 4:**
-- PO approval workflow
 - Supplier contract management
 - Rate card management
 - Tour leader assignment
@@ -349,7 +348,7 @@
 
 | Phase | Duration | Start Date | End Date | Key Deliverable |
 |-------|----------|------------|----------|-----------------|
-| **Phase 1** | 10 weeks | Feb 11, 2026 | Apr 26, 2026 | MVP Demo (Booking Flow) |
+| **Phase 1** | 10 weeks | Feb 16, 2026 | Apr 26, 2026 | MVP Demo (Booking Flow + PO) |
 | **Phase 2** | 4 weeks | Apr 27, 2026 | May 24, 2026 | Production MVP (Payment & Docs) |
 | **Phase 3** | 3 weeks | May 25, 2026 | Jun 16, 2026 | Go Live (Essential ERP) |
 | **Phase 4** | Ongoing | Jun 17, 2026+ | - | Post-Launch Enhancements |
@@ -377,7 +376,6 @@
 - ✅ System stable for pilot testing
 
 #### Phase 3 (Go Live):
-- ✅ Basic PO workflow operational
 - ✅ Task management operational
 - ✅ Settlement process working (manual OK)
 - ✅ Profitability reports accurate
