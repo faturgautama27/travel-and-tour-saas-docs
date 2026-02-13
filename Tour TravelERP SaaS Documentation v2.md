@@ -358,6 +358,318 @@
 **🚨 CRITICAL:** Go Live target is **June 16, 2026**. Timeline compressed from 30 weeks to 17 weeks.
 
 ---
+## User Flows - Phase 1 (MVP Demo)
+
+### Flow 1: Platform Admin - Agency Onboarding (Simplified)
+
+**Goal:** Platform admin dapat create agency baru dengan cepat
+
+**Steps:**
+1. Platform admin login
+2. Navigate to "Agencies" menu
+3. Click "Add New Agency"
+4. Fill form:
+   - Company name
+   - Email
+   - Phone
+   - Subscription plan (Basic/Pro/Enterprise)
+5. Submit
+6. System creates:
+   - Agency record
+   - Default admin user
+   - Temporary password
+7. Platform admin manually shares credentials with agency owner (email/WhatsApp)
+
+**Phase 1 Simplifications:**
+- No welcome email (manual sharing)
+- No setup wizard (agency can start using immediately)
+- No branch setup (single branch assumed)
+- No payment config (manual setup later)
+
+---
+
+### Flow 2: Supplier - Service Creation
+
+**Goal:** Supplier dapat publish service ke marketplace
+
+**Steps:**
+1. Supplier login (after manual approval by platform admin)
+2. Navigate to "Services" menu
+3. Click "Add New Service"
+4. Select service type (Hotel/Flight/Visa/Transport/Guide)
+5. Fill service details:
+   - **Hotel:** Name, location, star rating, room types, price per night
+   - **Flight:** Airline, route, departure time, price per pax
+   - **Visa:** Type, processing time, price per pax
+   - **Transport:** Vehicle type, capacity, price per trip
+   - **Guide:** Name, language, price per day
+6. Set pricing (base price in IDR)
+7. Set visibility: Marketplace (public)
+8. Save as Draft
+9. Review preview
+10. Click "Publish"
+11. Service now visible to all agencies
+
+**Phase 1 Simplifications:**
+- No photo upload (text description only)
+- No availability calendar (assumed always available)
+- No private assignment (marketplace only)
+- No complex pricing rules (flat price only)
+
+---
+
+### Flow 3: Agency - Purchase Order Creation
+
+**Goal:** Agency dapat create Purchase Order ke Supplier untuk request services
+
+**Steps:**
+1. Agency staff login
+2. Navigate to "Purchase Orders" menu
+3. Click "Create New PO"
+4. Select supplier from dropdown
+5. Add PO items:
+   - Click "Add Item"
+   - Select service from supplier's catalog
+   - Enter quantity (e.g., 10 nights for hotel)
+   - Unit price auto-filled from service
+   - Item total calculated: quantity × unit price
+   - Repeat for multiple services
+6. System calculates PO total amount
+7. Review PO summary
+8. Submit PO
+9. System creates PO (status: Pending)
+10. PO code generated: PO-260211-001
+11. Supplier receives notification
+
+**Phase 1 Simplifications:**
+- No email notification (in-app only)
+- No PO terms & conditions
+- No delivery date specification
+- Simple approval workflow (approve/reject only)
+
+---
+
+### Flow 4: Supplier - Purchase Order Approval
+
+**Goal:** Supplier dapat review dan approve/reject PO dari Agency
+
+**Steps:**
+1. Supplier login
+2. Dashboard shows notification: "1 pending PO"
+3. Navigate to "Purchase Orders" → "Pending Approval"
+4. Click PO "PO-260211-001"
+5. Review PO details:
+   - Agency: ABC Travel
+   - PO items: Hotel (10 nights), Flight (2 pax), Visa (2 pax)
+   - Total amount: Rp 15,000,000
+6. Decision:
+   - **Option A: Approve**
+     - Click "Approve"
+     - System updates status: Pending → Approved
+     - Agency receives notification
+     - Agency can now create package from this PO
+   
+   - **Option B: Reject**
+     - Click "Reject"
+     - Enter reason: "Service not available for requested dates"
+     - System updates status: Pending → Rejected
+     - Agency receives notification with reason
+
+**Phase 1 Simplifications:**
+- No partial approval (all or nothing)
+- No negotiation workflow
+- No PO modification after submission
+
+---
+
+### Flow 5: Agency - Package Creation from Approved PO
+
+**Goal:** Agency dapat create package dari approved Purchase Order
+
+**Steps:**
+1. Agency staff login
+2. Navigate to "Purchase Orders" → "Approved"
+3. Click PO "PO-260211-001"
+4. Click "Create Package from PO"
+5. System pre-fills package form with services from PO
+6. Fill additional package info:
+   - Package name: "Umrah Premium March 2026"
+   - Package type: Umrah
+   - Duration: 15 days, 14 nights
+   - Description
+7. Services already added from PO (can add more if needed)
+8. System calculates base cost from PO items
+9. Set markup:
+   - Markup type: Fixed amount
+   - Markup: Rp 4,750,000
+   - Selling price: Rp 25,000,000/pax
+10. Add departure dates and quota
+11. Set visibility: Public
+12. Save and publish
+13. Package linked to PO (approved_po_id)
+
+**Phase 1 Simplifications:**
+- Can only create one package per PO
+- Cannot modify PO services in package (can only add more)
+- No PO cost tracking vs actual package cost
+
+---
+
+### Flow 6: Agency - Package Creation (Direct from Catalog)
+
+**Goal:** Agency dapat create package langsung dari supplier catalog (tanpa PO)
+
+**Steps:**
+1. Agency staff login
+2. Navigate to "Packages" menu
+3. Click "Create New Package"
+4. Fill basic info:
+   - Package name: "Umrah Premium March 2026"
+   - Package type: Umrah
+   - Duration: 15 days, 14 nights
+   - Description
+5. Add services:
+   - Click "Add Service"
+   - Browse supplier catalog
+   - Filter by type (Hotel)
+   - Select "Elaf Al Mashaer Hotel - Mecca"
+   - Quantity: 10 nights
+   - Unit cost: Rp 500,000/night
+   - Total: Rp 5,000,000/pax
+   - Repeat for Flight, Visa, Transport, Guide
+6. System calculates base cost: Rp 20,250,000/pax
+7. Set markup:
+   - Markup type: Fixed amount
+   - Markup: Rp 4,750,000
+   - Selling price: Rp 25,000,000/pax
+8. Add departure:
+   - Departure date: March 15, 2026
+   - Return date: March 29, 2026
+   - Quota: 40 pax
+9. Set visibility: Public
+10. Save as Draft
+11. Review preview
+12. Click "Publish"
+13. Package now visible on traveler portal
+
+**Phase 1 Simplifications:**
+- No pricing tiers (single price only)
+- No installment config (full payment assumed)
+- No itinerary builder (text description only)
+- No document requirements (assumed standard)
+- Single departure only
+
+---
+
+### Flow 7: Traveler - Booking (Self-Service)
+
+**Goal:** Customer dapat browse dan book package
+
+**Steps:**
+1. Customer visits traveler portal (no login required for browsing)
+2. Browse packages (list view with search)
+3. Click package "Umrah Premium March 2026"
+4. View package details:
+   - Description, duration, highlights
+   - Services included
+   - Price: Rp 25,000,000/pax
+   - Available departure: March 15, 2026 (23/40 available)
+5. Click "Book Now"
+6. System prompts login/register
+7. Customer registers:
+   - Email, password, name, phone
+8. Fill booking form:
+   - Number of travelers: 3 pax
+   - Traveler 1 details (name, gender, DOB, passport)
+   - Traveler 2 details
+   - Traveler 3 details
+   - Mahram relationship (if applicable)
+9. Review booking summary:
+   - Total: Rp 75,000,000 (3 pax × Rp 25,000,000)
+10. Submit booking
+11. System creates booking (status: Pending)
+12. Customer sees confirmation:
+    - Booking reference: BKG-260211-001
+    - Status: Pending approval
+    - Message: "Your booking is being reviewed. You will receive approval within 2 hours."
+
+**Phase 1 Simplifications:**
+- No payment at this stage (payment after approval)
+- No document upload (will be added in Phase 2)
+- No installment selection (full payment assumed)
+
+---
+
+### Flow 8: Agency - Booking Approval
+
+**Goal:** Agency staff dapat review dan approve booking
+
+**Steps:**
+1. Agency staff login
+2. Dashboard shows notification: "1 pending booking"
+3. Navigate to "Bookings" → "Pending Approval"
+4. Click booking "BKG-260211-001"
+5. Review booking details:
+   - Customer: Ahmad Yani
+   - Package: Umrah Premium March 2026
+   - Departure: March 15, 2026
+   - Travelers: 3 pax
+   - Total: Rp 75,000,000
+   - Quota check: 23 available (sufficient)
+6. Decision:
+   - **Option A: Approve**
+     - Click "Approve"
+     - System updates status: Pending → Approved
+     - System shows message: "Booking approved. Customer will be notified."
+     - Customer receives notification (in-app, no email in Phase 1)
+     - Customer can now proceed to payment (mock in Phase 1)
+   
+   - **Option B: Reject**
+     - Click "Reject"
+     - Enter reason: "Quota full for March 15"
+     - System updates status: Pending → Rejected
+     - Customer receives notification with reason
+
+**Phase 1 Simplifications:**
+- No email notification (in-app only)
+- No payment processing (status changes to "Confirmed" manually)
+- No quota deduction (manual tracking)
+
+---
+
+### Flow 9: Agency - Manual Booking (Staff)
+
+**Goal:** Agency staff dapat create booking untuk walk-in customer
+
+**Steps:**
+1. Agency staff login
+2. Navigate to "Bookings" → "Create Booking"
+3. Search package: "Umrah Premium March"
+4. Select package
+5. Select departure: March 15, 2026
+6. Enter number of travelers: 4 pax
+7. Fill traveler details (quick entry mode):
+   - Traveler 1: Name, gender, DOB
+   - Traveler 2: Name, gender, DOB
+   - Traveler 3: Name, gender, DOB
+   - Traveler 4: Name, gender, DOB
+8. Enter customer contact:
+   - Name, email, phone
+9. Total: Rp 100,000,000 (4 pax × Rp 25,000,000)
+10. Select payment method: Cash
+11. Confirm cash received
+12. Submit booking
+13. System creates booking (status: Confirmed - auto-approved)
+14. System generates booking reference: BKG-260211-002
+15. Staff prints booking confirmation
+16. Hand to customer
+
+**Phase 1 Simplifications:**
+- Payment status set to "Paid" (no actual payment processing)
+- No receipt generation (Phase 2)
+- No invoice generation (Phase 2)
+
+---
 
 ### 🎯 Success Criteria per Phase
 
@@ -1409,366 +1721,6 @@ flowchart TD
 ```
 
 ---
-
-## User Flows - Phase 1 (MVP Demo)
-
-### Flow 1: Platform Admin - Agency Onboarding (Simplified)
-
-**Goal:** Platform admin dapat create agency baru dengan cepat
-
-**Steps:**
-1. Platform admin login
-2. Navigate to "Agencies" menu
-3. Click "Add New Agency"
-4. Fill form:
-   - Company name
-   - Email
-   - Phone
-   - Subscription plan (Basic/Pro/Enterprise)
-5. Submit
-6. System creates:
-   - Agency record
-   - Default admin user
-   - Temporary password
-7. Platform admin manually shares credentials with agency owner (email/WhatsApp)
-
-**Phase 1 Simplifications:**
-- No welcome email (manual sharing)
-- No setup wizard (agency can start using immediately)
-- No branch setup (single branch assumed)
-- No payment config (manual setup later)
-
----
-
-### Flow 2: Supplier - Service Creation
-
-**Goal:** Supplier dapat publish service ke marketplace
-
-**Steps:**
-1. Supplier login (after manual approval by platform admin)
-2. Navigate to "Services" menu
-3. Click "Add New Service"
-4. Select service type (Hotel/Flight/Visa/Transport/Guide)
-5. Fill service details:
-   - **Hotel:** Name, location, star rating, room types, price per night
-   - **Flight:** Airline, route, departure time, price per pax
-   - **Visa:** Type, processing time, price per pax
-   - **Transport:** Vehicle type, capacity, price per trip
-   - **Guide:** Name, language, price per day
-6. Set pricing (base price in IDR)
-7. Set visibility: Marketplace (public)
-8. Save as Draft
-9. Review preview
-10. Click "Publish"
-11. Service now visible to all agencies
-
-**Phase 1 Simplifications:**
-- No photo upload (text description only)
-- No availability calendar (assumed always available)
-- No private assignment (marketplace only)
-- No complex pricing rules (flat price only)
-
----
-
-### Flow 3: Agency - Purchase Order Creation
-
-**Goal:** Agency dapat create Purchase Order ke Supplier untuk request services
-
-**Steps:**
-1. Agency staff login
-2. Navigate to "Purchase Orders" menu
-3. Click "Create New PO"
-4. Select supplier from dropdown
-5. Add PO items:
-   - Click "Add Item"
-   - Select service from supplier's catalog
-   - Enter quantity (e.g., 10 nights for hotel)
-   - Unit price auto-filled from service
-   - Item total calculated: quantity × unit price
-   - Repeat for multiple services
-6. System calculates PO total amount
-7. Review PO summary
-8. Submit PO
-9. System creates PO (status: Pending)
-10. PO code generated: PO-260211-001
-11. Supplier receives notification
-
-**Phase 1 Simplifications:**
-- No email notification (in-app only)
-- No PO terms & conditions
-- No delivery date specification
-- Simple approval workflow (approve/reject only)
-
----
-
-### Flow 4: Supplier - Purchase Order Approval
-
-**Goal:** Supplier dapat review dan approve/reject PO dari Agency
-
-**Steps:**
-1. Supplier login
-2. Dashboard shows notification: "1 pending PO"
-3. Navigate to "Purchase Orders" → "Pending Approval"
-4. Click PO "PO-260211-001"
-5. Review PO details:
-   - Agency: ABC Travel
-   - PO items: Hotel (10 nights), Flight (2 pax), Visa (2 pax)
-   - Total amount: Rp 15,000,000
-6. Decision:
-   - **Option A: Approve**
-     - Click "Approve"
-     - System updates status: Pending → Approved
-     - Agency receives notification
-     - Agency can now create package from this PO
-   
-   - **Option B: Reject**
-     - Click "Reject"
-     - Enter reason: "Service not available for requested dates"
-     - System updates status: Pending → Rejected
-     - Agency receives notification with reason
-
-**Phase 1 Simplifications:**
-- No partial approval (all or nothing)
-- No negotiation workflow
-- No PO modification after submission
-
----
-
-### Flow 5: Agency - Package Creation from Approved PO
-
-**Goal:** Agency dapat create package dari approved Purchase Order
-
-**Steps:**
-1. Agency staff login
-2. Navigate to "Purchase Orders" → "Approved"
-3. Click PO "PO-260211-001"
-4. Click "Create Package from PO"
-5. System pre-fills package form with services from PO
-6. Fill additional package info:
-   - Package name: "Umrah Premium March 2026"
-   - Package type: Umrah
-   - Duration: 15 days, 14 nights
-   - Description
-7. Services already added from PO (can add more if needed)
-8. System calculates base cost from PO items
-9. Set markup:
-   - Markup type: Fixed amount
-   - Markup: Rp 4,750,000
-   - Selling price: Rp 25,000,000/pax
-10. Add departure dates and quota
-11. Set visibility: Public
-12. Save and publish
-13. Package linked to PO (approved_po_id)
-
-**Phase 1 Simplifications:**
-- Can only create one package per PO
-- Cannot modify PO services in package (can only add more)
-- No PO cost tracking vs actual package cost
-
----
-
-### Flow 6: Agency - Package Creation (Direct from Catalog)
-
-**Goal:** Agency dapat create package langsung dari supplier catalog (tanpa PO)
-
-**Steps:**
-1. Agency staff login
-2. Navigate to "Packages" menu
-3. Click "Create New Package"
-4. Fill basic info:
-   - Package name: "Umrah Premium March 2026"
-   - Package type: Umrah
-   - Duration: 15 days, 14 nights
-   - Description
-5. Add services:
-   - Click "Add Service"
-   - Browse supplier catalog
-   - Filter by type (Hotel)
-   - Select "Elaf Al Mashaer Hotel - Mecca"
-   - Quantity: 10 nights
-   - Unit cost: Rp 500,000/night
-   - Total: Rp 5,000,000/pax
-   - Repeat for Flight, Visa, Transport, Guide
-6. System calculates base cost: Rp 20,250,000/pax
-7. Set markup:
-   - Markup type: Fixed amount
-   - Markup: Rp 4,750,000
-   - Selling price: Rp 25,000,000/pax
-8. Add departure:
-   - Departure date: March 15, 2026
-   - Return date: March 29, 2026
-   - Quota: 40 pax
-9. Set visibility: Public
-10. Save as Draft
-11. Review preview
-12. Click "Publish"
-13. Package now visible on traveler portal
-
-**Phase 1 Simplifications:**
-- No pricing tiers (single price only)
-- No installment config (full payment assumed)
-- No itinerary builder (text description only)
-- No document requirements (assumed standard)
-- Single departure only
-
----
-
-### Flow 7: Traveler - Booking (Self-Service)
-
-**Goal:** Agency dapat create package dari supplier services
-
-**Steps:**
-1. Agency staff login
-2. Navigate to "Packages" menu
-3. Click "Create New Package"
-4. Fill basic info:
-   - Package name: "Umrah Premium March 2026"
-   - Package type: Umrah
-   - Duration: 15 days, 14 nights
-   - Description
-5. Add services:
-   - Click "Add Service"
-   - Browse supplier catalog
-   - Filter by type (Hotel)
-   - Select "Elaf Al Mashaer Hotel - Mecca"
-   - Quantity: 10 nights
-   - Unit cost: Rp 500,000/night
-   - Total: Rp 5,000,000/pax
-   - Repeat for Flight, Visa, Transport, Guide
-6. System calculates base cost: Rp 20,250,000/pax
-7. Set markup:
-   - Markup type: Fixed amount
-   - Markup: Rp 4,750,000
-   - Selling price: Rp 25,000,000/pax
-8. Add departure:
-   - Departure date: March 15, 2026
-   - Return date: March 29, 2026
-   - Quota: 40 pax
-9. Set visibility: Public
-10. Save as Draft
-11. Review preview
-12. Click "Publish"
-13. Package now visible on traveler portal
-
-**Phase 1 Simplifications:**
-- No pricing tiers (single price only)
-- No installment config (full payment assumed)
-- No itinerary builder (text description only)
-- No document requirements (assumed standard)
-- Single departure only
-
----
-
-### Flow 7: Traveler - Booking (Self-Service)
-
-**Goal:** Customer dapat browse dan book package
-
-**Steps:**
-1. Customer visits traveler portal (no login required for browsing)
-2. Browse packages (list view with search)
-3. Click package "Umrah Premium March 2026"
-4. View package details:
-   - Description, duration, highlights
-   - Services included
-   - Price: Rp 25,000,000/pax
-   - Available departure: March 15, 2026 (23/40 available)
-5. Click "Book Now"
-6. System prompts login/register
-7. Customer registers:
-   - Email, password, name, phone
-8. Fill booking form:
-   - Number of travelers: 3 pax
-   - Traveler 1 details (name, gender, DOB, passport)
-   - Traveler 2 details
-   - Traveler 3 details
-   - Mahram relationship (if applicable)
-9. Review booking summary:
-   - Total: Rp 75,000,000 (3 pax × Rp 25,000,000)
-10. Submit booking
-11. System creates booking (status: Pending)
-12. Customer sees confirmation:
-    - Booking reference: BKG-260211-001
-    - Status: Pending approval
-    - Message: "Your booking is being reviewed. You will receive approval within 2 hours."
-
-**Phase 1 Simplifications:**
-- No payment at this stage (payment after approval)
-- No document upload (will be added in Phase 2)
-- No installment selection (full payment assumed)
-
----
-
-### Flow 8: Agency - Booking Approval
-
-**Goal:** Agency staff dapat review dan approve booking
-
-**Steps:**
-1. Agency staff login
-2. Dashboard shows notification: "1 pending booking"
-3. Navigate to "Bookings" → "Pending Approval"
-4. Click booking "BKG-260211-001"
-5. Review booking details:
-   - Customer: Ahmad Yani
-   - Package: Umrah Premium March 2026
-   - Departure: March 15, 2026
-   - Travelers: 3 pax
-   - Total: Rp 75,000,000
-   - Quota check: 23 available (sufficient)
-6. Decision:
-   - **Option A: Approve**
-     - Click "Approve"
-     - System updates status: Pending → Approved
-     - System shows message: "Booking approved. Customer will be notified."
-     - Customer receives notification (in-app, no email in Phase 1)
-     - Customer can now proceed to payment (mock in Phase 1)
-   
-   - **Option B: Reject**
-     - Click "Reject"
-     - Enter reason: "Quota full for March 15"
-     - System updates status: Pending → Rejected
-     - Customer receives notification with reason
-
-**Phase 1 Simplifications:**
-- No email notification (in-app only)
-- No payment processing (status changes to "Confirmed" manually)
-- No quota deduction (manual tracking)
-
----
-
-### Flow 9: Agency - Manual Booking (Staff)
-
-**Goal:** Agency staff dapat create booking untuk walk-in customer
-
-**Steps:**
-1. Agency staff login
-2. Navigate to "Bookings" → "Create Booking"
-3. Search package: "Umrah Premium March"
-4. Select package
-5. Select departure: March 15, 2026
-6. Enter number of travelers: 4 pax
-7. Fill traveler details (quick entry mode):
-   - Traveler 1: Name, gender, DOB
-   - Traveler 2: Name, gender, DOB
-   - Traveler 3: Name, gender, DOB
-   - Traveler 4: Name, gender, DOB
-8. Enter customer contact:
-   - Name, email, phone
-9. Total: Rp 100,000,000 (4 pax × Rp 25,000,000)
-10. Select payment method: Cash
-11. Confirm cash received
-12. Submit booking
-13. System creates booking (status: Confirmed - auto-approved)
-14. System generates booking reference: BKG-260211-002
-15. Staff prints booking confirmation
-16. Hand to customer
-
-**Phase 1 Simplifications:**
-- Payment status set to "Paid" (no actual payment processing)
-- No receipt generation (Phase 2)
-- No invoice generation (Phase 2)
-
----
-
 
 ## Database Schema - Complete
 
