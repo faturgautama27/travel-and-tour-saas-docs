@@ -81,124 +81,154 @@ Tasks are grouped by:
 
 ---
 
-## Week 3: Platform Admin & Supplier Management (Mar 2 - Mar 8)
+## Week 3: Platform Admin & Subscription Management (Mar 2 - Mar 8)
 
-### 6. Platform Admin - Agency Management (Req 3)
+### 6. Subscription Plan & Commission Management (Req 6, 7, 8, 9)
 
-- [ ] 6.1 Create CreateAgencyCommand and handler
-- [ ] 6.2 Create UpdateAgencyCommand and handler
-- [ ] 6.3 Create ActivateAgencyCommand and handler
-- [ ] 6.4 Create GetAgenciesQuery and handler with pagination
-- [ ] 6.5 Create GetAgencyByIdQuery and handler
-- [ ] 6.6 Create agency DTOs and validators
-- [ ] 6.7 Create agency API endpoints
-- [ ] 6.8 Write unit tests for agency commands/queries
-- [ ] 6.9 Test agency code generation logic
+- [ ] 15.1 Create SubscriptionPlan entity and configuration
+- [ ] 15.2 Create AgencySubscription entity and configuration
+- [ ] 15.3 Create CommissionConfig entity and configuration
+- [ ] 15.4 Create CommissionHistory entity and configuration
+- [ ] 15.5 Create CreateSubscriptionPlanCommand and handler
+- [ ] 15.6 Create UpdateSubscriptionPlanCommand and handler
+- [ ] 15.7 Create ActivateSubscriptionPlanCommand and handler
+- [ ] 15.8 Create GetSubscriptionPlansQuery and handler
+- [ ] 15.9 Create GetSubscriptionPlanByIdQuery and handler
+- [ ] 15.10 Create AssignSubscriptionCommand and handler
+- [ ] 15.11 Implement subscription end_date calculation logic
+- [ ] 15.12 Create UpgradeSubscriptionCommand and handler
+- [ ] 15.13 Create UpdateCommissionConfigCommand and handler
+- [ ] 15.14 Create GetCurrentCommissionConfigQuery and handler
+- [ ] 15.15 Create GetCommissionHistoryQuery and handler
+- [ ] 15.16 Implement commission calculation service
+- [ ] 15.17 Create GetRevenueMetricsQuery and handler
+- [ ] 15.18 Implement MRR and ARR calculation logic
+- [ ] 15.19 Create GetRevenueByPlanQuery and handler
+- [ ] 15.20 Create GetTopRevenueAgenciesQuery and handler
+- [ ] 15.21 Create GetCommissionRevenueTrendQuery and handler
+- [ ] 15.22 Create subscription & commission DTOs and validators
+- [ ] 15.23 Create subscription & commission API endpoints
+- [ ] 15.24 Write unit tests for subscription commands/queries
+- [ ] 15.25 Write unit tests for commission calculation logic
+- [ ] 15.26 Test subscription status transitions (active/expired)
+- [ ] 15.27 Test revenue aggregation queries
 
-### 7. Supplier Registration & Approval (Req 4)
+### 7. Platform Admin - Agency Management (Req 3)
 
-- [ ] 7.1 Create RegisterSupplierCommand and handler
-- [ ] 7.2 Create ApproveSupplierCommand and handler
-- [ ] 7.3 Create RejectSupplierCommand and handler
-- [ ] 7.4 Create GetSuppliersQuery and handler with filtering
-- [ ] 7.5 Create GetSupplierByIdQuery and handler
-- [ ] 7.6 Create supplier DTOs and validators
-- [ ] 7.7 Create supplier API endpoints
-- [ ] 7.8 Write unit tests for supplier commands/queries
-- [ ] 7.9 Test supplier code generation logic
+- [ ] 15.1 Create CreateAgencyCommand and handler
+- [ ] 15.2 Create UpdateAgencyCommand and handler
+- [ ] 15.3 Create ActivateAgencyCommand and handler
+- [ ] 15.4 Create GetAgenciesQuery and handler with pagination
+- [ ] 15.5 Create GetAgencyByIdQuery and handler
+- [ ] 15.6 Create agency DTOs and validators
+- [ ] 15.7 Create agency API endpoints
+- [ ] 15.8 Write unit tests for agency commands/queries
+- [ ] 15.9 Test agency code generation logic
 
-### 8. Platform Admin Dashboard
+### 8. Supplier Registration & Approval (Req 4)
 
-- [ ] 8.1 Create GetPlatformDashboardQuery and handler
-- [ ] 8.2 Implement statistics aggregation queries
-- [ ] 8.3 Create dashboard DTOs
-- [ ] 8.4 Create dashboard API endpoint
-- [ ] 8.5 Write unit tests for dashboard query
+- [ ] 15.1 Create RegisterSupplierCommand and handler
+- [ ] 15.2 Create ApproveSupplierCommand and handler
+- [ ] 15.3 Create RejectSupplierCommand and handler
+- [ ] 15.4 Create GetSuppliersQuery and handler with filtering
+- [ ] 15.5 Create GetSupplierByIdQuery and handler
+- [ ] 15.6 Create supplier DTOs and validators
+- [ ] 15.7 Create supplier API endpoints
+- [ ] 15.8 Write unit tests for supplier commands/queries
+- [ ] 15.9 Test supplier code generation logic
+
+### 9. Platform Admin Dashboard
+
+- [ ] 15.1 Create GetPlatformDashboardQuery and handler
+- [ ] 15.2 Implement statistics aggregation queries
+- [ ] 15.3 Create dashboard DTOs
+- [ ] 15.4 Create dashboard API endpoint
+- [ ] 15.5 Write unit tests for dashboard query
 
 
 ---
 
 ## Week 4: Supplier Services & Purchase Orders (Mar 9 - Mar 15)
 
-### 9. Supplier Service Management (Req 5)
+### 10. Supplier Service Management (Req 5)
 
-- [ ] 9.1 Create CreateSupplierServiceCommand and handler
-- [ ] 9.2 Create UpdateSupplierServiceCommand and handler
-- [ ] 9.3 Create PublishSupplierServiceCommand and handler
-- [ ] 9.4 Create GetSupplierServicesQuery and handler
-- [ ] 9.5 Create GetSupplierServiceByIdQuery and handler
-- [ ] 9.6 Implement service code generation (SVC-{SUPPLIER_CODE}-{SEQ})
-- [ ] 9.7 Create service DTOs and validators for all 8 types
-- [ ] 9.8 Create service API endpoints
-- [ ] 9.9 Write unit tests for service commands/queries
-- [ ] 9.10 Test type-specific field validation
+- [ ] 15.1 Create CreateSupplierServiceCommand and handler
+- [ ] 15.2 Create UpdateSupplierServiceCommand and handler
+- [ ] 15.3 Create PublishSupplierServiceCommand and handler
+- [ ] 15.4 Create GetSupplierServicesQuery and handler
+- [ ] 15.5 Create GetSupplierServiceByIdQuery and handler
+- [ ] 15.6 Implement service code generation (SVC-{SUPPLIER_CODE}-{SEQ})
+- [ ] 15.7 Create service DTOs and validators for all 8 types
+- [ ] 15.8 Create service API endpoints
+- [ ] 15.9 Write unit tests for service commands/queries
+- [ ] 15.10 Test type-specific field validation
 
-### 10. Seasonal Pricing (Req 6)
+### 11. Seasonal Pricing (Req 10)
 
-- [ ] 10.1 Create CreateSeasonalPriceCommand and handler
-- [ ] 10.2 Create UpdateSeasonalPriceCommand and handler
-- [ ] 10.3 Create DeleteSeasonalPriceCommand and handler
-- [ ] 10.4 Create GetSeasonalPricesQuery and handler
-- [ ] 10.5 Implement GetServicePriceForDateQuery using database function
-- [ ] 10.6 Create seasonal price DTOs and validators
-- [ ] 10.7 Create seasonal price API endpoints
-- [ ] 10.8 Write unit tests for seasonal pricing logic
-- [ ] 10.9 Test date range overlap handling
+- [ ] 15.1 Create CreateSeasonalPriceCommand and handler
+- [ ] 15.2 Create UpdateSeasonalPriceCommand and handler
+- [ ] 15.3 Create DeleteSeasonalPriceCommand and handler
+- [ ] 15.4 Create GetSeasonalPricesQuery and handler
+- [ ] 15.5 Implement GetServicePriceForDateQuery using database function
+- [ ] 15.6 Create seasonal price DTOs and validators
+- [ ] 15.7 Create seasonal price API endpoints
+- [ ] 15.8 Write unit tests for seasonal pricing logic
+- [ ] 15.9 Test date range overlap handling
 
-### 11. Purchase Order Creation (Req 7)
+### 12. Purchase Order Creation (Req 11)
 
-- [ ] 11.1 Create CreatePurchaseOrderCommand and handler
-- [ ] 11.2 Implement PO number generation (PO-YYMMDD-XXX)
-- [ ] 11.3 Implement total amount calculation
-- [ ] 11.4 Create GetPurchaseOrdersQuery and handler with filtering
-- [ ] 11.5 Create GetPurchaseOrderByIdQuery and handler
-- [ ] 11.6 Create PO DTOs and validators
-- [ ] 11.7 Create PO API endpoints
-- [ ] 11.8 Write unit tests for PO commands/queries
-- [ ] 11.9 Test PO item validation
+- [ ] 15.1 Create CreatePurchaseOrderCommand and handler
+- [ ] 15.2 Implement PO number generation (PO-YYMMDD-XXX)
+- [ ] 15.3 Implement total amount calculation
+- [ ] 15.4 Create GetPurchaseOrdersQuery and handler with filtering
+- [ ] 15.5 Create GetPurchaseOrderByIdQuery and handler
+- [ ] 15.6 Create PO DTOs and validators
+- [ ] 15.7 Create PO API endpoints
+- [ ] 15.8 Write unit tests for PO commands/queries
+- [ ] 15.9 Test PO item validation
 
-### 12. Purchase Order Approval (Req 8)
+### 13. Purchase Order Approval (Req 12)
 
-- [ ] 12.1 Create ApprovePurchaseOrderCommand and handler
-- [ ] 12.2 Create RejectPurchaseOrderCommand and handler
-- [ ] 12.3 Implement status workflow validation
-- [ ] 12.4 Create notification service for PO status changes
-- [ ] 12.5 Write unit tests for PO approval workflow
-- [ ] 12.6 Test rejection reason requirement
+- [ ] 15.1 Create ApprovePurchaseOrderCommand and handler
+- [ ] 15.2 Create RejectPurchaseOrderCommand and handler
+- [ ] 15.3 Implement status workflow validation
+- [ ] 15.4 Create notification service for PO status changes
+- [ ] 15.5 Write unit tests for PO approval workflow
+- [ ] 15.6 Test rejection reason requirement
 
 
 ---
 
 ## Week 5: Package, Journey & Booking Management (Mar 16 - Mar 22)
 
-### 13. Package Management (Req 9)
+### 14. Package Management (Req 13)
 
-- [ ] 13.1 Create CreatePackageCommand and handler
-- [ ] 13.2 Create UpdatePackageCommand and handler
-- [ ] 13.3 Create PublishPackageCommand and handler
-- [ ] 13.4 Implement package code generation (PKG-{AGENCY_CODE}-{SEQ})
-- [ ] 13.5 Implement pricing calculation (base cost + markup)
-- [ ] 13.6 Create GetPackagesQuery and handler with filtering
-- [ ] 13.7 Create GetPackageByIdQuery and handler
-- [ ] 13.8 Create package DTOs and validators
-- [ ] 13.9 Create package API endpoints
-- [ ] 13.10 Write unit tests for package commands/queries
-- [ ] 13.11 Test package-PO linking validation
+- [ ] 15.1 Create CreatePackageCommand and handler
+- [ ] 15.2 Create UpdatePackageCommand and handler
+- [ ] 15.3 Create PublishPackageCommand and handler
+- [ ] 15.4 Implement package code generation (PKG-{AGENCY_CODE}-{SEQ})
+- [ ] 15.5 Implement pricing calculation (base cost + markup)
+- [ ] 15.6 Create GetPackagesQuery and handler with filtering
+- [ ] 15.7 Create GetPackageByIdQuery and handler
+- [ ] 15.8 Create package DTOs and validators
+- [ ] 15.9 Create package API endpoints
+- [ ] 15.10 Write unit tests for package commands/queries
+- [ ] 15.11 Test package-PO linking validation
 
-### 14. Journey Management (Req 10)
+### 15. Journey Management (Req 14)
 
-- [ ] 14.1 Create CreateJourneyCommand and handler
-- [ ] 14.2 Create UpdateJourneyCommand and handler
-- [ ] 14.3 Implement journey code generation (JRN-{PKG_CODE}-{YYMMDD})
-- [ ] 14.4 Implement quota management logic
-- [ ] 14.5 Create GetJourneysQuery and handler
-- [ ] 14.6 Create GetJourneyByIdQuery and handler
-- [ ] 14.7 Create journey DTOs and validators
-- [ ] 14.8 Create journey API endpoints
-- [ ] 14.9 Write unit tests for journey commands/queries
-- [ ] 14.10 Test quota invariant (total = confirmed + available)
+- [ ] 15.1 Create CreateJourneyCommand and handler
+- [ ] 15.2 Create UpdateJourneyCommand and handler
+- [ ] 15.3 Implement journey code generation (JRN-{PKG_CODE}-{YYMMDD})
+- [ ] 15.4 Implement quota management logic
+- [ ] 15.5 Create GetJourneysQuery and handler
+- [ ] 15.6 Create GetJourneyByIdQuery and handler
+- [ ] 15.7 Create journey DTOs and validators
+- [ ] 15.8 Create journey API endpoints
+- [ ] 15.9 Write unit tests for journey commands/queries
+- [ ] 15.10 Test quota invariant (total = confirmed + available)
 
-### 15. Customer Management (Req 11)
+### 16. Customer Management (Req 15)
 
 - [ ] 15.1 Create CreateCustomerCommand and handler
 - [ ] 15.2 Create UpdateCustomerCommand and handler
@@ -211,7 +241,7 @@ Tasks are grouped by:
 - [ ] 15.9 Write unit tests for customer commands/queries
 - [ ] 15.10 Test phone/email uniqueness validation
 
-### 16. Booking Creation (Req 12)
+### 17. Booking Creation (Req 16)
 
 - [ ] 16.1 Create CreateBookingCommand and handler
 - [ ] 16.2 Implement booking reference generation (BKG-YYYY-XXXX)
@@ -222,7 +252,7 @@ Tasks are grouped by:
 - [ ] 16.7 Create booking API endpoints
 - [ ] 16.8 Write unit tests for booking commands/queries
 
-### 17. Booking Approval & Quota (Req 13)
+### 18. Booking Approval & Quota (Req 17)
 
 - [ ] 17.1 Create ApproveBookingCommand and handler
 - [ ] 17.2 Create CancelBookingCommand and handler
@@ -232,7 +262,7 @@ Tasks are grouped by:
 - [ ] 17.6 Write unit tests for booking approval workflow
 - [ ] 17.7 Test quota management edge cases
 
-### 18. Traveler Management (Req 14)
+### 19. Traveler Management (Req 18)
 
 - [ ] 18.1 Create AddTravelerCommand and handler
 - [ ] 18.2 Create UpdateTravelerCommand and handler
@@ -248,7 +278,7 @@ Tasks are grouped by:
 
 ## Week 6: Document & Task Management (Mar 23 - Mar 29)
 
-### 19. Document Checklist Auto-Generation (Req 15)
+### 20. Document Checklist Auto-Generation (Req 19)
 
 - [ ] 19.1 Implement document auto-generation on booking confirmation
 - [ ] 19.2 Create GetBookingDocumentsQuery and handler
@@ -260,7 +290,7 @@ Tasks are grouped by:
 - [ ] 19.8 Write unit tests for document auto-generation
 - [ ] 19.9 Test document type filtering by package type
 
-### 20. Document Status Tracking (Req 16)
+### 21. Document Status Tracking (Req 20)
 
 - [ ] 20.1 Create UpdateDocumentStatusCommand and handler
 - [ ] 20.2 Create VerifyDocumentCommand and handler
@@ -271,7 +301,7 @@ Tasks are grouped by:
 - [ ] 20.7 Write unit tests for document commands
 - [ ] 20.8 Test expiry validation logic
 
-### 21. Task Checklist Auto-Generation (Req 17)
+### 22. Task Checklist Auto-Generation (Req 21)
 
 - [ ] 21.1 Implement task auto-generation on booking confirmation
 - [ ] 21.2 Implement due date calculation from template offset
@@ -283,7 +313,7 @@ Tasks are grouped by:
 - [ ] 21.8 Write unit tests for task auto-generation
 - [ ] 21.9 Test task template filtering by trigger stage
 
-### 22. Task Management (Req 19)
+### 23. Task Management (Req 23)
 
 - [ ] 22.1 Create CreateTaskCommand and handler (custom tasks)
 - [ ] 22.2 Create UpdateTaskStatusCommand and handler
@@ -301,7 +331,7 @@ Tasks are grouped by:
 
 ## Week 7: Notifications & Payments (Mar 30 - Apr 5)
 
-### 23. Notification Scheduling (Req 20)
+### 24. Notification Scheduling (Req 24)
 
 - [ ] 23.1 Create CreateNotificationScheduleCommand and handler
 - [ ] 23.2 Create UpdateNotificationScheduleCommand and handler
@@ -313,7 +343,7 @@ Tasks are grouped by:
 - [ ] 23.8 Write unit tests for notification commands
 - [ ] 23.9 Test template rendering with variables
 
-### 24. Daily Notification Job (Req 21)
+### 25. Daily Notification Job (Req 25)
 
 - [ ] 24.1 Install and configure Hangfire
 - [ ] 24.2 Create DailyNotificationJob class
@@ -326,7 +356,7 @@ Tasks are grouped by:
 - [ ] 24.9 Write unit tests for notification job
 - [ ] 24.10 Test notification trigger matching
 
-### 25. Notification Retry Mechanism (Req 22)
+### 26. Notification Retry Mechanism (Req 26)
 
 - [ ] 25.1 Create NotificationRetryJob class
 - [ ] 25.2 Implement retry logic with 3-attempt limit
@@ -337,7 +367,7 @@ Tasks are grouped by:
 - [ ] 25.7 Write unit tests for retry job
 - [ ] 25.8 Test retry count increment
 
-### 26. Payment Schedule Auto-Generation (Req 23)
+### 27. Payment Schedule Auto-Generation (Req 27)
 
 - [ ] 26.1 Implement payment schedule auto-generation on booking confirmation
 - [ ] 26.2 Implement DP due date calculation (booking date + 3 days)
@@ -349,7 +379,7 @@ Tasks are grouped by:
 - [ ] 26.8 Write unit tests for payment schedule generation
 - [ ] 26.9 Test due date calculations
 
-### 27. Payment Recording (Req 24)
+### 28. Payment Recording (Req 28)
 
 - [ ] 27.1 Create RecordPaymentCommand and handler
 - [ ] 27.2 Implement paid_amount update logic
@@ -366,7 +396,7 @@ Tasks are grouped by:
 
 ## Week 8: Itinerary, Supplier Bills & Communication (Apr 6 - Apr 12)
 
-### 28. Itinerary Builder (Req 25)
+### 29. Itinerary Builder (Req 29)
 
 - [ ] 28.1 Create CreateItineraryCommand and handler
 - [ ] 28.2 Create AddItineraryDayCommand and handler
@@ -381,7 +411,7 @@ Tasks are grouped by:
 - [ ] 28.11 Write unit tests for itinerary commands
 - [ ] 28.12 Test one-itinerary-per-package constraint
 
-### 29. Supplier Bill Auto-Generation (Req 26)
+### 30. Supplier Bill Auto-Generation (Req 30)
 
 - [ ] 29.1 Implement supplier bill auto-generation on PO approval
 - [ ] 29.2 Implement bill number generation (BILL-YYMMDD-XXX)
@@ -393,7 +423,7 @@ Tasks are grouped by:
 - [ ] 29.8 Write unit tests for bill auto-generation
 - [ ] 29.9 Test bill amount equals PO amount
 
-### 30. Supplier Payment Recording (Req 27)
+### 31. Supplier Payment Recording (Req 31)
 
 - [ ] 30.1 Create RecordSupplierPaymentCommand and handler
 - [ ] 30.2 Implement paid_amount update logic
@@ -403,7 +433,7 @@ Tasks are grouped by:
 - [ ] 30.6 Write unit tests for supplier payment commands
 - [ ] 30.7 Test payment status transitions
 
-### 31. Communication Log (Req 28)
+### 32. Communication Log (Req 32)
 
 - [ ] 31.1 Create CreateCommunicationLogCommand and handler
 - [ ] 31.2 Create UpdateCommunicationLogCommand and handler
@@ -414,7 +444,7 @@ Tasks are grouped by:
 - [ ] 31.7 Write unit tests for communication commands
 - [ ] 31.8 Test follow-up date validation
 
-### 32. H-30 and H-7 Task Generation Jobs (Req 18)
+### 33. H-30 and H-7 Task Generation Jobs (Req 22)
 
 - [ ] 32.1 Create GenerateH30TasksJob class
 - [ ] 32.2 Create GenerateH7TasksJob class
@@ -430,7 +460,7 @@ Tasks are grouped by:
 
 ## Week 9: B2B Marketplace & Profitability (Apr 13 - Apr 19)
 
-### 33. Agency Service Publishing (Req 29)
+### 34. Agency Service Publishing (Req 33)
 
 - [ ] 33.1 Create PublishAgencyServiceCommand and handler
 - [ ] 33.2 Implement markup percentage calculation
@@ -444,7 +474,7 @@ Tasks are grouped by:
 - [ ] 33.10 Write unit tests for agency service commands
 - [ ] 33.11 Test supplier name hiding logic
 
-### 34. Marketplace Browsing (Req 30)
+### 35. Marketplace Browsing (Req 34)
 
 - [ ] 34.1 Create GetMarketplaceServicesQuery and handler
 - [ ] 34.2 Implement supplier name hiding in query results
@@ -457,7 +487,7 @@ Tasks are grouped by:
 - [ ] 34.9 Write unit tests for marketplace queries
 - [ ] 34.10 Test own-agency exclusion logic
 
-### 35. Agency Order Creation (Req 31)
+### 36. Agency Order Creation (Req 35)
 
 - [ ] 35.1 Create CreateAgencyOrderCommand and handler
 - [ ] 35.2 Implement order number generation (AO-YYMMDD-XXX)
@@ -472,7 +502,7 @@ Tasks are grouped by:
 - [ ] 35.11 Write unit tests for agency order commands
 - [ ] 35.12 Test quota reservation/release logic
 
-### 36. Agency Order Approval (Req 32)
+### 37. Agency Order Approval (Req 36)
 
 - [ ] 36.1 Create ApproveAgencyOrderCommand and handler
 - [ ] 36.2 Create RejectAgencyOrderCommand and handler
@@ -483,7 +513,7 @@ Tasks are grouped by:
 - [ ] 36.7 Write unit tests for order approval workflow
 - [ ] 36.8 Test quota transfer logic
 
-### 37. Auto-Reject Pending Orders Job (Req 33)
+### 38. Auto-Reject Pending Orders Job (Req 37)
 
 - [ ] 37.1 Create AutoRejectPendingOrdersJob class
 - [ ] 37.2 Implement 24-hour timeout logic
@@ -493,7 +523,7 @@ Tasks are grouped by:
 - [ ] 37.6 Write unit tests for auto-reject job
 - [ ] 37.7 Test notification sending on auto-rejection
 
-### 38. Auto-Unpublish Zero Quota Job (Req 34)
+### 39. Auto-Unpublish Zero Quota Job (Req 38)
 
 - [ ] 38.1 Create AutoUnpublishZeroQuotaJob class
 - [ ] 38.2 Implement zero quota identification logic
@@ -503,7 +533,7 @@ Tasks are grouped by:
 - [ ] 38.6 Write unit tests for auto-unpublish job
 - [ ] 38.7 Test quota invariant validation
 
-### 39. Profitability Tracking (Req 35, 36)
+### 40. Profitability Tracking (Req 39, 40)
 
 - [ ] 39.1 Create GetBookingProfitabilityQuery and handler
 - [ ] 39.2 Implement revenue calculation
@@ -521,7 +551,7 @@ Tasks are grouped by:
 
 ## Week 10: Integration Testing & Bug Fixes (Apr 20 - Apr 26)
 
-### 40. Integration Testing
+### 41. Integration Testing
 
 - [ ] 40.1 Setup integration test project with Testcontainers
 - [ ] 40.2 Write integration tests for authentication flow
@@ -538,7 +568,7 @@ Tasks are grouped by:
 - [ ] 40.13 Write integration tests for profitability tracking
 - [ ] 40.14 Write integration tests for multi-tenancy isolation
 
-### 41. Performance Testing & Optimization
+### 42. Performance Testing & Optimization
 
 - [ ] 41.1 Run performance tests on list endpoints with large datasets
 - [ ] 41.2 Optimize database queries with proper indexes
@@ -548,7 +578,7 @@ Tasks are grouped by:
 - [ ] 41.6 Implement database connection pooling optimization
 - [ ] 41.7 Test concurrent request handling
 
-### 42. Security Testing
+### 43. Security Testing
 
 - [ ] 42.1 Test authentication bypass attempts
 - [ ] 42.2 Test authorization bypass attempts (cross-tenant access)
@@ -559,7 +589,7 @@ Tasks are grouped by:
 - [ ] 42.7 Test JWT token expiration and refresh
 - [ ] 42.8 Test rate limiting (if implemented)
 
-### 43. Bug Fixes & Code Quality
+### 44. Bug Fixes & Code Quality
 
 - [ ] 43.1 Fix all critical bugs identified during testing
 - [ ] 43.2 Fix all high-priority bugs
@@ -576,7 +606,7 @@ Tasks are grouped by:
 
 ## Week 11: Demo Preparation & Deployment (Apr 27 - May 3)
 
-### 44. Demo Data Preparation
+### 45. Demo Data Preparation
 
 - [ ] 44.1 Create comprehensive seed data script for demo
 - [ ] 44.2 Create 2 sample agencies (Agency A - wholesaler, Agency B - retailer)
@@ -594,7 +624,7 @@ Tasks are grouped by:
 - [ ] 44.14 Create sample notification logs
 - [ ] 44.15 Verify all demo data is realistic and demonstrates all features
 
-### 45. Documentation & Deployment
+### 46. Documentation & Deployment
 
 - [ ] 45.1 Update README with setup instructions
 - [ ] 45.2 Update API documentation with all endpoints
@@ -607,7 +637,7 @@ Tasks are grouped by:
 - [ ] 45.9 Prepare demo script for backend API testing
 - [ ] 45.10 Final code cleanup and formatting
 
-### 46. Demo Rehearsal
+### 47. Demo Rehearsal
 
 - [ ] 46.1 Test complete authentication flow
 - [ ] 46.2 Test platform admin workflows

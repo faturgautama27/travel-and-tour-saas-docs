@@ -301,13 +301,43 @@ Build a comprehensive SaaS ERP platform for travel agencies that focuses on:
 - Agency B: Access inventory without direct supplier relationships
 - Platform: Commission from both sides
 
+#### 20. Subscription & Commission Management
+
+**Platform Admin Features:**
+- Subscription plan management (create, update, activate/deactivate)
+- Assign subscription plans to agencies
+- Commission configuration (booking, marketplace transactions)
+- Revenue dashboard (subscription + commission revenue)
+- Agency subscription tracking
+- Commission transaction monitoring
+
+**Subscription Plans:**
+- Multiple tiers (Basic, Professional, Enterprise)
+- Monthly/Annual billing cycles
+- Feature limits (max users, max bookings per month)
+- Auto-renewal management
+
+**Commission System:**
+- Configurable commission rates (percentage or fixed)
+- Transaction types: Bookings, Marketplace sales/purchases
+- Min/max transaction amounts
+- Effective date ranges
+- Commission collection tracking
+
+**Revenue Metrics:**
+- Total subscription revenue
+- Total commission revenue (bookings + marketplace)
+- Active agencies count
+- New agencies / Churned agencies
+- Transaction volumes
+
 ---
 
 ## Database Schema
 
 ### Overview
 
-The system uses PostgreSQL 16 with 24+ tables organized into logical groups:
+The system uses PostgreSQL 16 with 29+ tables organized into logical groups:
 
 1. **Core Tables** (3): users, agencies, suppliers
 2. **Service Tables** (2): supplier_services, supplier_service_seasonal_prices
@@ -322,8 +352,9 @@ The system uses PostgreSQL 16 with 24+ tables organized into logical groups:
 11. **Supplier Bills Tables** (2): supplier_bills, supplier_payments
 12. **Communication Tables** (1): communication_logs
 13. **B2B Marketplace Tables** (2): agency_services, agency_orders
+14. **Subscription & Commission Tables** (5): subscription_plans, agency_subscriptions, commission_configs, commission_transactions, revenue_metrics
 
-**Total: 24+ tables**
+**Total: 29+ tables**
 
 ### Key Schema Changes from v2
 

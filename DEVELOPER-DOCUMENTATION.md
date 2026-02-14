@@ -1006,6 +1006,131 @@ CREATE POLICY agency_orders_seller_policy ON agency_orders
     USING (seller_agency_id = current_setting('app.current_agency_id')::UUID);
 ```
 
+### Subscription & Commission Tables
+
+#### subscription_plans
+```sql
+CREATE TABLE subscription_plans (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    plan_code VARCHAR(50) UNIQUE NOT NULL,
+    plan_name VARCHAR(100) NOT NULL,
+    description TEXT,
+    monthly_fee DECIMAL(15,2) NOT NULL,
+    annual_fee DECIMAL(15,2) NOT NULL,
+    max_users INTEGER,
+    max_bookings_per_month INTEGER,
+    features JSONB,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_subscription_plans_code ON subscription_plans(plan_code);
+CREATE INDEX idx_subscription_plans_active ON subscription_plans(is_active);
+```
+
+#### agency_subscriptions
+```sql
+CREATE TABLE agency_subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    agency_id UUID NOT NULL REFERENCES agencies(id),
+    plan_id UUID NOT NULL REFERENCES subscription_plans(id),
+    status VARCHAR(50) DEFAULT 'active',
+    start_date DATE NOT NULL,
+    end_date DATE,
+    billing_cycle VARCHAR(50) NOT NULL,
+    next_billing_date DATE NOT NULL,
+    auto_renew BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_agency_subscriptions_agency ON agency_subscriptions(agency_id);
+CREATE INDEX idx_agency_subscriptions_plan ON agency_subscriptions(plan_id);
+CREATE INDEX idx_agency_subscriptions_status ON agency_subscriptions(status);
+CREATE INDEX idx_agency_subscriptions_next_billing ON agency_subscriptions(next_billing_date);
+
+-- RLS Policy
+ALTER TABLE agency_subscriptions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY agency_subscriptions_policy ON agency_subscriptions
+    FOR ALL
+    USING (agency_id = current_setting('app.current_agency_id')::UUID);
+```
+
+#### commission_configs
+```sql
+CREATE TABLE commission_configs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    config_name VARCHAR(100) NOT NULL,
+    transaction_type VARCHAR(50) NOT NULL,
+    commission_type VARCHAR(50) NOT NULL,
+    commission_value DECIMAL(15,2) NOT NULL,
+    min_transaction_amount DECIMAL(15,2),
+    max_commission_amount DECIMAL(15,2),
+    is_active BOOLEAN DEFAULT true,
+    effective_from DATE NOT NULL,
+    effective_to DATE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_commission_configs_type ON commission_configs(transaction_type);
+CREATE INDEX idx_commission_configs_active ON commission_configs(is_active);
+CREATE INDEX idx_commission_configs_dates ON commission_configs(effective_from, effective_to);
+```
+
+#### commission_transactions
+```sql
+CREATE TABLE commission_transactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    agency_id UUID NOT NULL REFERENCES agencies(id),
+    transaction_type VARCHAR(50) NOT NULL,
+    transaction_reference_id UUID NOT NULL,
+    transaction_amount DECIMAL(15,2) NOT NULL,
+    commission_config_id UUID REFERENCES commission_configs(id),
+    commission_amount DECIMAL(15,2) NOT NULL,
+    commission_percentage DECIMAL(5,2),
+    status VARCHAR(50) DEFAULT 'pending',
+    transaction_date DATE NOT NULL,
+    collected_at TIMESTAMP,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_commission_transactions_agency ON commission_transactions(agency_id);
+CREATE INDEX idx_commission_transactions_type ON commission_transactions(transaction_type);
+CREATE INDEX idx_commission_transactions_status ON commission_transactions(status);
+CREATE INDEX idx_commission_transactions_date ON commission_transactions(transaction_date);
+
+-- RLS Policy
+ALTER TABLE commission_transactions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY commission_transactions_policy ON commission_transactions
+    FOR ALL
+    USING (agency_id = current_setting('app.current_agency_id')::UUID);
+```
+
+#### revenue_metrics
+```sql
+CREATE TABLE revenue_metrics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    metric_date DATE NOT NULL UNIQUE,
+    total_subscription_revenue DECIMAL(15,2) DEFAULT 0,
+    total_commission_revenue DECIMAL(15,2) DEFAULT 0,
+    total_booking_commissions DECIMAL(15,2) DEFAULT 0,
+    total_marketplace_commissions DECIMAL(15,2) DEFAULT 0,
+    active_agencies_count INTEGER DEFAULT 0,
+    new_agencies_count INTEGER DEFAULT 0,
+    churned_agencies_count INTEGER DEFAULT 0,
+    total_bookings_count INTEGER DEFAULT 0,
+    total_marketplace_transactions_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_revenue_metrics_date ON revenue_metrics(metric_date);
+```
+
 ---
 
 ## API Endpoints
@@ -1045,6 +1170,37 @@ GET    /api/admin/dashboard
 GET    /api/admin/marketplace/services
 GET    /api/admin/marketplace/orders
 GET    /api/admin/marketplace/stats
+```
+
+#### Subscription & Commission Management
+```
+GET    /api/admin/subscription-plans
+POST   /api/admin/subscription-plans
+GET    /api/admin/subscription-plans/{id}
+PUT    /api/admin/subscription-plans/{id}
+PATCH  /api/admin/subscription-plans/{id}/status
+DELETE /api/admin/subscription-plans/{id}
+
+GET    /api/admin/agencies/{id}/subscription
+POST   /api/admin/agencies/{id}/subscription
+PATCH  /api/admin/agencies/{id}/subscription/renew
+PATCH  /api/admin/agencies/{id}/subscription/cancel
+
+GET    /api/admin/commission-configs
+POST   /api/admin/commission-configs
+GET    /api/admin/commission-configs/{id}
+PUT    /api/admin/commission-configs/{id}
+PATCH  /api/admin/commission-configs/{id}/status
+DELETE /api/admin/commission-configs/{id}
+
+GET    /api/admin/commission-transactions
+GET    /api/admin/commission-transactions/{id}
+PATCH  /api/admin/commission-transactions/{id}/collect
+PATCH  /api/admin/commission-transactions/{id}/waive
+
+GET    /api/admin/revenue-metrics
+GET    /api/admin/revenue-dashboard
+GET    /api/admin/revenue-metrics/export
 ```
 
 ### Supplier Endpoints

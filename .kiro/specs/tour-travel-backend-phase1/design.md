@@ -255,6 +255,33 @@ The system implements Row-Level Security (RLS) in PostgreSQL for complete data i
 - Methods: MarkFollowUpDone()
 - Relationships: BelongsTo Agency, BelongsTo Customer, BelongsTo Booking, BelongsTo User (CreatedBy)
 
+#### Subscription and Commission Entities
+
+**SubscriptionPlan**
+- Properties: Id, PlanCode, PlanName, Description, MonthlyFee, AnnualFee, MaxUsers, MaxBookingsPerMonth, Features, IsActive
+- Methods: Activate(), Deactivate(), UpdatePricing()
+- Relationships: HasMany AgencySubscriptions
+
+**AgencySubscription**
+- Properties: Id, AgencyId, PlanId, Status, StartDate, EndDate, BillingCycle, NextBillingDate, AutoRenew
+- Methods: Activate(), Suspend(), Cancel(), Renew(), CalculateNextBillingDate()
+- Relationships: BelongsTo Agency, BelongsTo SubscriptionPlan
+
+**CommissionConfig**
+- Properties: Id, ConfigName, TransactionType, CommissionType, CommissionValue, MinTransactionAmount, MaxCommissionAmount, IsActive, EffectiveFrom, EffectiveTo
+- Methods: Activate(), Deactivate(), CalculateCommission(), IsEffectiveForDate()
+- Relationships: HasMany CommissionTransactions
+
+**CommissionTransaction**
+- Properties: Id, AgencyId, TransactionType, TransactionReferenceId, TransactionAmount, CommissionConfigId, CommissionAmount, CommissionPercentage, Status, TransactionDate, CollectedAt, Notes
+- Methods: Collect(), Waive(), CalculateCommission()
+- Relationships: BelongsTo Agency, BelongsTo CommissionConfig
+
+**RevenueMetric**
+- Properties: Id, MetricDate, TotalSubscriptionRevenue, TotalCommissionRevenue, TotalBookingCommissions, TotalMarketplaceCommissions, ActiveAgenciesCount, NewAgenciesCount, ChurnedAgenciesCount, TotalBookingsCount, TotalMarketplaceTransactionsCount
+- Methods: Calculate(), Aggregate()
+- Relationships: None (aggregate data)
+
 #### B2B Marketplace Entities
 
 **AgencyService**
@@ -350,6 +377,21 @@ The system implements Row-Level Security (RLS) in PostgreSQL for complete data i
 - ApproveAgencyOrderCommand → ApproveAgencyOrderCommandHandler
 - RejectAgencyOrderCommand → RejectAgencyOrderCommandHandler
 
+**Subscription Commands**
+- CreateSubscriptionPlanCommand → CreateSubscriptionPlanCommandHandler
+- UpdateSubscriptionPlanCommand → UpdateSubscriptionPlanCommandHandler
+- ActivateSubscriptionPlanCommand → ActivateSubscriptionPlanCommandHandler
+- AssignSubscriptionCommand → AssignSubscriptionCommandHandler
+- RenewSubscriptionCommand → RenewSubscriptionCommandHandler
+- CancelSubscriptionCommand → CancelSubscriptionCommandHandler
+
+**Commission Commands**
+- CreateCommissionConfigCommand → CreateCommissionConfigCommandHandler
+- UpdateCommissionConfigCommand → UpdateCommissionConfigCommandHandler
+- RecordCommissionCommand → RecordCommissionCommandHandler
+- CollectCommissionCommand → CollectCommissionCommandHandler
+- WaiveCommissionCommand → WaiveCommissionCommandHandler
+
 #### Query Handlers
 
 **Agency Queries**
@@ -424,6 +466,19 @@ The system implements Row-Level Security (RLS) in PostgreSQL for complete data i
 - GetBookingProfitabilityQuery → GetBookingProfitabilityQueryHandler
 - GetProfitabilityDashboardQuery → GetProfitabilityDashboardQueryHandler
 
+**Subscription Queries**
+- GetSubscriptionPlansQuery → GetSubscriptionPlansQueryHandler
+- GetSubscriptionPlanByIdQuery → GetSubscriptionPlanByIdQueryHandler
+- GetAgencySubscriptionQuery → GetAgencySubscriptionQueryHandler
+- GetSubscriptionHistoryQuery → GetSubscriptionHistoryQueryHandler
+
+**Commission Queries**
+- GetCommissionConfigsQuery → GetCommissionConfigsQueryHandler
+- GetCommissionTransactionsQuery → GetCommissionTransactionsQueryHandler
+- GetCommissionSummaryQuery → GetCommissionSummaryQueryHandler
+- GetRevenueMetricsQuery → GetRevenueMetricsQueryHandler
+- GetRevenueDashboardQuery → GetRevenueDashboardQueryHandler
+
 ### Infrastructure Services
 
 **IAuthenticationService**
@@ -446,7 +501,7 @@ The system implements Row-Level Security (RLS) in PostgreSQL for complete data i
 
 ### Database Schema Overview
 
-The system uses PostgreSQL 16 with 24+ tables organized into logical groups:
+The system uses PostgreSQL 16 with 29+ tables organized into logical groups:
 
 1. Core Tables (3): users, agencies, suppliers
 2. Service Tables (2): supplier_services, supplier_service_seasonal_prices
@@ -461,6 +516,7 @@ The system uses PostgreSQL 16 with 24+ tables organized into logical groups:
 11. Supplier Bills Tables (2): supplier_bills, supplier_payments
 12. Communication Tables (1): communication_logs
 13. B2B Marketplace Tables (2): agency_services, agency_orders
+14. Subscription & Commission Tables (5): subscription_plans, agency_subscriptions, commission_configs, commission_transactions, revenue_metrics
 
 ### Core Tables
 
@@ -854,6 +910,78 @@ The system uses PostgreSQL 16 with 24+ tables organized into logical groups:
 - created_at: TIMESTAMP
 
 
+### Subscription and Commission Tables
+
+**subscription_plans**
+- id: UUID (PK)
+- plan_code: VARCHAR(50) UNIQUE NOT NULL
+- plan_name: VARCHAR(100) NOT NULL
+- description: TEXT
+- monthly_fee: DECIMAL(15,2) NOT NULL
+- annual_fee: DECIMAL(15,2) NOT NULL
+- max_users: INTEGER
+- max_bookings_per_month: INTEGER
+- features: JSONB (list of included features)
+- is_active: BOOLEAN DEFAULT true
+- created_at, updated_at: TIMESTAMP
+
+**agency_subscriptions**
+- id: UUID (PK)
+- agency_id: UUID (FK → agencies) NOT NULL
+- plan_id: UUID (FK → subscription_plans) NOT NULL
+- status: VARCHAR(50) DEFAULT 'active' (active, suspended, cancelled, expired)
+- start_date: DATE NOT NULL
+- end_date: DATE
+- billing_cycle: VARCHAR(50) NOT NULL (monthly, annual)
+- next_billing_date: DATE NOT NULL
+- auto_renew: BOOLEAN DEFAULT true
+- created_at, updated_at: TIMESTAMP
+- RLS Policy: agency_id = current_setting('app.current_agency_id')::UUID
+
+**commission_configs**
+- id: UUID (PK)
+- config_name: VARCHAR(100) NOT NULL
+- transaction_type: VARCHAR(50) NOT NULL (booking, marketplace_sale, marketplace_purchase)
+- commission_type: VARCHAR(50) NOT NULL (percentage, fixed)
+- commission_value: DECIMAL(15,2) NOT NULL
+- min_transaction_amount: DECIMAL(15,2)
+- max_commission_amount: DECIMAL(15,2)
+- is_active: BOOLEAN DEFAULT true
+- effective_from: DATE NOT NULL
+- effective_to: DATE
+- created_at, updated_at: TIMESTAMP
+
+**commission_transactions**
+- id: UUID (PK)
+- agency_id: UUID (FK → agencies) NOT NULL
+- transaction_type: VARCHAR(50) NOT NULL
+- transaction_reference_id: UUID NOT NULL (booking_id or agency_order_id)
+- transaction_amount: DECIMAL(15,2) NOT NULL
+- commission_config_id: UUID (FK → commission_configs) NOT NULL
+- commission_amount: DECIMAL(15,2) NOT NULL
+- commission_percentage: DECIMAL(5,2)
+- status: VARCHAR(50) DEFAULT 'pending' (pending, collected, waived)
+- transaction_date: DATE NOT NULL
+- collected_at: TIMESTAMP
+- notes: TEXT
+- created_at: TIMESTAMP
+- RLS Policy: agency_id = current_setting('app.current_agency_id')::UUID
+
+**revenue_metrics**
+- id: UUID (PK)
+- metric_date: DATE NOT NULL
+- total_subscription_revenue: DECIMAL(15,2) DEFAULT 0
+- total_commission_revenue: DECIMAL(15,2) DEFAULT 0
+- total_booking_commissions: DECIMAL(15,2) DEFAULT 0
+- total_marketplace_commissions: DECIMAL(15,2) DEFAULT 0
+- active_agencies_count: INTEGER DEFAULT 0
+- new_agencies_count: INTEGER DEFAULT 0
+- churned_agencies_count: INTEGER DEFAULT 0
+- total_bookings_count: INTEGER DEFAULT 0
+- total_marketplace_transactions_count: INTEGER DEFAULT 0
+- created_at: TIMESTAMP
+- UNIQUE: metric_date
+
 ### Communication and Marketplace Tables
 
 **communication_logs**
@@ -941,6 +1069,11 @@ All foreign keys are indexed. Additional indexes:
 - supplier_bills: agency_id, supplier_id, po_id, status
 - agency_services: agency_id, po_id, service_type, is_published
 - agency_orders: buyer_agency_id, seller_agency_id, agency_service_id, status, order_number
+- subscription_plans: plan_code, is_active
+- agency_subscriptions: agency_id, plan_id, status, next_billing_date
+- commission_configs: transaction_type, is_active, effective_from, effective_to
+- commission_transactions: agency_id, transaction_type, status, transaction_date
+- revenue_metrics: metric_date
 
 
 ---

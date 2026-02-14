@@ -136,6 +136,36 @@ Membangun platform SaaS ERP lengkap untuk travel agency yang fokus pada:
 - Agency B: Access inventory without direct supplier relationships
 - Platform: Commission from both sides
 
+### G. Subscription & Commission Management (Week 9) ⭐ **NEW**
+
+**Platform Admin Features:**
+- Subscription plan management (create, update, activate/deactivate)
+- Assign subscription plans to agencies
+- Commission configuration (booking, marketplace transactions)
+- Revenue dashboard (subscription + commission revenue)
+- Agency subscription tracking
+- Commission transaction monitoring
+
+**Subscription Plans:**
+- Multiple tiers (Basic, Professional, Enterprise)
+- Monthly/Annual billing cycles
+- Feature limits (max users, max bookings per month)
+- Auto-renewal management
+
+**Commission System:**
+- Configurable commission rates (percentage or fixed)
+- Transaction types: Bookings, Marketplace sales/purchases
+- Min/max transaction amounts
+- Effective date ranges
+- Commission collection tracking
+
+**Revenue Metrics:**
+- Total subscription revenue
+- Total commission revenue (bookings + marketplace)
+- Active agencies count
+- New agencies / Churned agencies
+- Transaction volumes
+
 ---
 
 ## 📊 Business Impact
@@ -170,9 +200,16 @@ Membangun platform SaaS ERP lengkap untuk travel agency yang fokus pada:
 ### For Platform
 
 **Revenue Streams:**
-- Subscription fees from agencies
-- Commission from B2B marketplace transactions
+- Subscription fees from agencies (tiered plans)
+- Commission from bookings (configurable percentage)
+- Commission from B2B marketplace transactions (both buyer and seller)
 - Premium features (Phase 2+)
+
+**Platform Management:**
+- Subscription plan management
+- Commission configuration
+- Revenue tracking and analytics
+- Agency lifecycle management
 
 ---
 
@@ -211,7 +248,14 @@ Membangun platform SaaS ERP lengkap untuk travel agency yang fokus pada:
 - Agency A approves order
 - Quota management
 
-### Part 6: Analytics & Reports (5 min)
+### Part 6: Subscription & Commission Management (5 min) ⭐ **NEW**
+- Platform admin creates subscription plans
+- Platform admin assigns subscription to agency
+- Platform admin configures commission rates
+- Revenue dashboard (subscription + commission)
+- Commission transaction tracking
+
+### Part 7: Analytics & Reports (5 min)
 - Profitability tracking
 - Comprehensive dashboard
 - Reports
@@ -268,6 +312,9 @@ Membangun platform SaaS ERP lengkap untuk travel agency yang fokus pada:
 - ✅ Itinerary builder working
 - ✅ B2B marketplace working (Agency A ↔ Agency B)
 - ✅ Supplier name HIDDEN in marketplace
+- ✅ Subscription plan management working
+- ✅ Commission configuration working
+- ✅ Revenue dashboard showing correct data
 - ✅ All dashboards showing correct data
 - ✅ System stable (no critical bugs)
 
