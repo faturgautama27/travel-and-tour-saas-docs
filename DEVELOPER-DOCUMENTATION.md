@@ -148,16 +148,26 @@ CREATE TABLE suppliers (
     email VARCHAR(255) NOT NULL,
     phone VARCHAR(50),
     address TEXT,
+    city VARCHAR(100),
+    province VARCHAR(100),
+    postal_code VARCHAR(20),
+    country VARCHAR(100) DEFAULT 'Indonesia',
     business_type VARCHAR(100),
+    business_license_number VARCHAR(100) UNIQUE,
+    tax_id VARCHAR(100) UNIQUE,
     status VARCHAR(50) DEFAULT 'pending', -- pending, active, rejected, suspended
     approved_at TIMESTAMP,
     approved_by UUID REFERENCES users(id),
+    rejection_reason TEXT,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE INDEX idx_suppliers_code ON suppliers(supplier_code);
 CREATE INDEX idx_suppliers_status ON suppliers(status);
+CREATE INDEX idx_suppliers_email ON suppliers(email);
+CREATE INDEX idx_suppliers_business_license ON suppliers(business_license_number);
+CREATE INDEX idx_suppliers_tax_id ON suppliers(tax_id);
 ```
 
 ### Supplier Services (Modified - Specific Fields)
@@ -1012,20 +1022,16 @@ CREATE POLICY agency_orders_seller_policy ON agency_orders
 ```sql
 CREATE TABLE subscription_plans (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    plan_code VARCHAR(50) UNIQUE NOT NULL,
     plan_name VARCHAR(100) NOT NULL,
-    description TEXT,
-    monthly_fee DECIMAL(15,2) NOT NULL,
-    annual_fee DECIMAL(15,2) NOT NULL,
-    max_users INTEGER,
-    max_bookings_per_month INTEGER,
-    features JSONB,
+    plan_type VARCHAR(50) NOT NULL, -- free, basic, professional, enterprise
+    monthly_price DECIMAL(15,2) NOT NULL DEFAULT 0,
+    features JSONB NOT NULL, -- {max_users, max_bookings_per_month, max_packages, marketplace_access, api_access, custom_branding}
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_subscription_plans_code ON subscription_plans(plan_code);
+CREATE INDEX idx_subscription_plans_type ON subscription_plans(plan_type);
 CREATE INDEX idx_subscription_plans_active ON subscription_plans(is_active);
 ```
 
@@ -1035,14 +1041,15 @@ CREATE TABLE agency_subscriptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     agency_id UUID NOT NULL REFERENCES agencies(id),
     plan_id UUID NOT NULL REFERENCES subscription_plans(id),
-    status VARCHAR(50) DEFAULT 'active',
+    status VARCHAR(50) DEFAULT 'active', -- active, suspended, cancelled, expired
     start_date DATE NOT NULL,
-    end_date DATE,
-    billing_cycle VARCHAR(50) NOT NULL,
+    billing_cycle VARCHAR(50) NOT NULL, -- monthly, quarterly, annually
     next_billing_date DATE NOT NULL,
-    auto_renew BOOLEAN DEFAULT true,
+    cancelled_at TIMESTAMP,
+    cancellation_reason TEXT,
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(agency_id, status) WHERE status = 'active' -- Only one active subscription per agency
 );
 
 CREATE INDEX idx_agency_subscriptions_agency ON agency_subscriptions(agency_id);
@@ -1062,38 +1069,37 @@ CREATE POLICY agency_subscriptions_policy ON agency_subscriptions
 ```sql
 CREATE TABLE commission_configs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    config_name VARCHAR(100) NOT NULL,
-    transaction_type VARCHAR(50) NOT NULL,
-    commission_type VARCHAR(50) NOT NULL,
-    commission_value DECIMAL(15,2) NOT NULL,
-    min_transaction_amount DECIMAL(15,2),
-    max_commission_amount DECIMAL(15,2),
-    is_active BOOLEAN DEFAULT true,
+    agency_id UUID REFERENCES agencies(id), -- NULL for global configs
+    service_type VARCHAR(50) NOT NULL, -- hotel, flight, visa, transport, guide, insurance, catering, handling, package, marketplace
+    commission_type VARCHAR(50) NOT NULL, -- percentage, fixed
+    commission_value DECIMAL(10,2) NOT NULL,
     effective_from DATE NOT NULL,
-    effective_to DATE,
+    effective_until DATE,
+    is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_commission_configs_type ON commission_configs(transaction_type);
+CREATE INDEX idx_commission_configs_agency ON commission_configs(agency_id);
+CREATE INDEX idx_commission_configs_service_type ON commission_configs(service_type);
 CREATE INDEX idx_commission_configs_active ON commission_configs(is_active);
-CREATE INDEX idx_commission_configs_dates ON commission_configs(effective_from, effective_to);
+CREATE INDEX idx_commission_configs_dates ON commission_configs(effective_from, effective_until);
 ```
 
 #### commission_transactions
 ```sql
 CREATE TABLE commission_transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    transaction_type VARCHAR(50) NOT NULL, -- booking, marketplace_order, purchase_order
+    reference_id UUID NOT NULL, -- booking_id, agency_order_id, or po_id
     agency_id UUID NOT NULL REFERENCES agencies(id),
-    transaction_type VARCHAR(50) NOT NULL,
-    transaction_reference_id UUID NOT NULL,
-    transaction_amount DECIMAL(15,2) NOT NULL,
     commission_config_id UUID REFERENCES commission_configs(id),
+    base_amount DECIMAL(15,2) NOT NULL,
+    commission_rate DECIMAL(10,2) NOT NULL,
     commission_amount DECIMAL(15,2) NOT NULL,
-    commission_percentage DECIMAL(5,2),
-    status VARCHAR(50) DEFAULT 'pending',
-    transaction_date DATE NOT NULL,
+    status VARCHAR(50) DEFAULT 'pending', -- pending, collected, waived, refunded
     collected_at TIMESTAMP,
+    payment_reference VARCHAR(255),
     notes TEXT,
     created_at TIMESTAMP DEFAULT NOW()
 );
@@ -1101,7 +1107,7 @@ CREATE TABLE commission_transactions (
 CREATE INDEX idx_commission_transactions_agency ON commission_transactions(agency_id);
 CREATE INDEX idx_commission_transactions_type ON commission_transactions(transaction_type);
 CREATE INDEX idx_commission_transactions_status ON commission_transactions(status);
-CREATE INDEX idx_commission_transactions_date ON commission_transactions(transaction_date);
+CREATE INDEX idx_commission_transactions_reference ON commission_transactions(reference_id, transaction_type);
 
 -- RLS Policy
 ALTER TABLE commission_transactions ENABLE ROW LEVEL SECURITY;
@@ -1115,20 +1121,28 @@ CREATE POLICY commission_transactions_policy ON commission_transactions
 ```sql
 CREATE TABLE revenue_metrics (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    metric_date DATE NOT NULL UNIQUE,
-    total_subscription_revenue DECIMAL(15,2) DEFAULT 0,
-    total_commission_revenue DECIMAL(15,2) DEFAULT 0,
-    total_booking_commissions DECIMAL(15,2) DEFAULT 0,
-    total_marketplace_commissions DECIMAL(15,2) DEFAULT 0,
-    active_agencies_count INTEGER DEFAULT 0,
-    new_agencies_count INTEGER DEFAULT 0,
-    churned_agencies_count INTEGER DEFAULT 0,
-    total_bookings_count INTEGER DEFAULT 0,
-    total_marketplace_transactions_count INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT NOW()
+    agency_id UUID NOT NULL REFERENCES agencies(id),
+    metric_date DATE NOT NULL,
+    total_bookings INTEGER DEFAULT 0,
+    total_revenue DECIMAL(15,2) DEFAULT 0,
+    total_commission DECIMAL(15,2) DEFAULT 0,
+    marketplace_orders INTEGER DEFAULT 0,
+    marketplace_revenue DECIMAL(15,2) DEFAULT 0,
+    active_packages INTEGER DEFAULT 0,
+    active_journeys INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(agency_id, metric_date)
 );
 
+CREATE INDEX idx_revenue_metrics_agency ON revenue_metrics(agency_id);
 CREATE INDEX idx_revenue_metrics_date ON revenue_metrics(metric_date);
+
+-- RLS Policy
+ALTER TABLE revenue_metrics ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY revenue_metrics_policy ON revenue_metrics
+    FOR ALL
+    USING (agency_id = current_setting('app.current_agency_id')::UUID);
 ```
 
 ---
@@ -1174,29 +1188,42 @@ GET    /api/admin/marketplace/stats
 
 #### Subscription & Commission Management
 ```
+# Subscription Plans
 GET    /api/admin/subscription-plans
 POST   /api/admin/subscription-plans
 GET    /api/admin/subscription-plans/{id}
 PUT    /api/admin/subscription-plans/{id}
-PATCH  /api/admin/subscription-plans/{id}/status
-DELETE /api/admin/subscription-plans/{id}
+PATCH  /api/admin/subscription-plans/{id}/activate
+PATCH  /api/admin/subscription-plans/{id}/deactivate
 
-GET    /api/admin/agencies/{id}/subscription
-POST   /api/admin/agencies/{id}/subscription
-PATCH  /api/admin/agencies/{id}/subscription/renew
-PATCH  /api/admin/agencies/{id}/subscription/cancel
+# Agency Subscriptions
+GET    /api/admin/agency-subscriptions
+POST   /api/admin/agency-subscriptions
+GET    /api/admin/agency-subscriptions/{id}
+PATCH  /api/admin/agency-subscriptions/{id}/cancel
+PATCH  /api/admin/agency-subscriptions/{id}/suspend
+PATCH  /api/admin/agency-subscriptions/{id}/reactivate
 
+# Commission Configs
 GET    /api/admin/commission-configs
 POST   /api/admin/commission-configs
 GET    /api/admin/commission-configs/{id}
 PUT    /api/admin/commission-configs/{id}
-PATCH  /api/admin/commission-configs/{id}/status
-DELETE /api/admin/commission-configs/{id}
+PATCH  /api/admin/commission-configs/{id}/activate
+PATCH  /api/admin/commission-configs/{id}/deactivate
 
+# Commission Transactions
 GET    /api/admin/commission-transactions
 GET    /api/admin/commission-transactions/{id}
 PATCH  /api/admin/commission-transactions/{id}/collect
 PATCH  /api/admin/commission-transactions/{id}/waive
+PATCH  /api/admin/commission-transactions/{id}/refund
+
+# Revenue Metrics
+GET    /api/admin/revenue-metrics
+GET    /api/admin/revenue-metrics/summary
+GET    /api/admin/revenue-metrics/agencies/{agency_id}
+```
 
 GET    /api/admin/revenue-metrics
 GET    /api/admin/revenue-dashboard
@@ -1571,6 +1598,35 @@ POST   /api/jobs/services/auto-unpublish
 11. If no response in 24 hours: auto-reject
 12. Service auto-unpublished if available quota = 0
 13. Order number format: AO-YYMMDD-XXX
+
+### Subscription Management
+1. Subscription plan types: free, basic, professional, enterprise
+2. Features stored as JSONB: max_users, max_bookings_per_month, max_packages, marketplace_access, api_access, custom_branding
+3. Only one active subscription per agency at a time
+4. Billing cycles: monthly, quarterly, annually
+5. Next billing date calculated based on start_date and billing_cycle
+6. Subscription status: active, suspended, cancelled, expired
+7. Cancelled subscriptions require cancellation_reason
+8. Cannot delete subscription plan if active subscriptions exist
+
+### Commission Management
+1. Commission types: percentage (0-100%), fixed (> 0)
+2. Service types: hotel, flight, visa, transport, guide, insurance, catering, handling, package, marketplace
+3. Agency-specific configs override global configs
+4. Commission calculated on booking confirmation and agency order approval
+5. Transaction types: booking, marketplace_order, purchase_order
+6. Commission status: pending, collected, waived, refunded
+7. Effective date range validation (effective_from to effective_until)
+8. Commission auto-recorded on booking confirmation
+9. Commission auto-recorded on marketplace order approval
+
+### Revenue Metrics
+1. Metrics aggregated daily per agency at midnight
+2. Metrics include: total_bookings, total_revenue, total_commission
+3. Marketplace metrics: marketplace_orders, marketplace_revenue
+4. Active counts: active_packages, active_journeys
+5. Metrics used for profitability dashboard and reporting
+6. One metric record per agency per date (unique constraint)
 
 ### Profitability
 1. Revenue = Package Price × Total Pax
@@ -1956,6 +2012,42 @@ public class AutoUnpublishServicesJob
             
             // Log action
             await LogAutoUnpublish(service);
+        }
+    }
+}
+```
+
+### 7. Update Revenue Metrics Job
+**Schedule:** Daily at midnight (00:00 AM)  
+**Purpose:** Aggregate daily revenue metrics per agency
+
+```csharp
+public class UpdateRevenueMetricsJob
+{
+    public async Task Execute()
+    {
+        // 1. Get all active agencies
+        var agencies = await GetActiveAgencies();
+        var yesterday = DateTime.Today.AddDays(-1);
+        
+        // 2. For each agency, calculate metrics
+        foreach (var agency in agencies)
+        {
+            var metrics = new RevenueMetric
+            {
+                AgencyId = agency.Id,
+                MetricDate = yesterday,
+                TotalBookings = await CountBookings(agency.Id, yesterday),
+                TotalRevenue = await CalculateRevenue(agency.Id, yesterday),
+                TotalCommission = await CalculateCommission(agency.Id, yesterday),
+                MarketplaceOrders = await CountMarketplaceOrders(agency.Id, yesterday),
+                MarketplaceRevenue = await CalculateMarketplaceRevenue(agency.Id, yesterday),
+                ActivePackages = await CountActivePackages(agency.Id),
+                ActiveJourneys = await CountActiveJourneys(agency.Id)
+            };
+            
+            // 3. Create or update metrics record
+            await UpsertRevenueMetrics(metrics);
         }
     }
 }
