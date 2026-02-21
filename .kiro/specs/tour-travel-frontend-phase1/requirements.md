@@ -10,7 +10,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 - **Supplier_Portal**: Web interface for suppliers to manage services and purchase orders
 - **Agency_Portal**: Web interface for travel agencies to manage complete ERP operations
 - **API_Service**: Service layer connecting to backend REST API endpoints
-- **NgRx_Store**: Centralized state management using Redux pattern
+- **NGXS_Store**: Centralized state management using NGXS (simpler alternative to NgRx)
 - **Standalone_Component**: Angular component without NgModule dependencies
 - **Lazy_Loading**: On-demand loading of feature modules via routes
 - **RLS_Context**: Row-Level Security context from JWT token for multi-tenant isolation
@@ -67,7 +67,6 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 4. THE Frontend SHALL handle 401 Unauthorized responses by redirecting to login page
 5. THE Frontend SHALL handle 403 Forbidden responses by displaying permission error message
 
-
 ### Requirement 4: Component Structure and Separation of Concerns
 
 **User Story:** As a developer, I want clear separation between HTML templates and TypeScript logic, so that the codebase is maintainable and follows Angular best practices.
@@ -92,17 +91,17 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 4. THE Frontend SHALL use size="small" for all p-button components unless explicitly requiring larger size
 5. THE Frontend SHALL follow PrimeNG 20 component API and styling conventions
 
-### Requirement 6: NgRx Store for State Management
+### Requirement 6: NGXS Store for State Management
 
-**User Story:** As a developer, I want centralized state management using NgRx, so that application state is predictable and debuggable.
+**User Story:** As a developer, I want centralized state management using NGXS, so that application state is predictable and debuggable with less boilerplate than NgRx.
 
 #### Acceptance Criteria
 
-1. THE Frontend SHALL use NgRx store for managing application state
-2. THE Frontend SHALL organize store by feature with actions, reducer, effects, selectors, and state files
-3. THE Frontend SHALL use NgRx effects for side effects like HTTP requests
-4. THE Frontend SHALL use selectors for deriving state in components
-5. THE Frontend SHALL dispatch actions from components and handle state updates in reducers
+1. THE Frontend SHALL use NGXS store for managing application state
+2. THE Frontend SHALL organize store by feature with state classes, actions, and selectors
+3. THE Frontend SHALL use NGXS actions for side effects like HTTP requests
+4. THE Frontend SHALL use NGXS selectors for deriving state in components
+5. THE Frontend SHALL dispatch actions from components and handle state updates in state classes using @Action decorators
 
 ### Requirement 7: PrimeNG UI Components and TailwindCSS Styling
 
@@ -128,8 +127,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 4. THE Frontend SHALL display confirmation dialog before deactivating an agency
 5. THE Frontend SHALL show toast notification after successful agency creation or update
 
-
-### Requirement 8: Platform Admin Portal - Supplier Approval
+### Requirement 9: Platform Admin Portal - Supplier Approval
 
 **User Story:** As a Platform_Admin, I want to approve or reject supplier registrations, so that only verified suppliers can offer services.
 
@@ -141,7 +139,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 4. THE Frontend SHALL provide reject button that opens dialog requiring rejection_reason
 5. THE Frontend SHALL show toast notification after successful supplier approval or rejection
 
-### Requirement 9: Platform Admin Portal - Dashboard
+### Requirement 10: Platform Admin Portal - Dashboard
 
 **User Story:** As a Platform_Admin, I want to view platform metrics on a dashboard, so that I can monitor platform health.
 
@@ -153,7 +151,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 4. THE Frontend SHALL display chart showing agency registrations over time
 5. THE Frontend SHALL display list of recent agency registrations
 
-### Requirement 10: Platform Admin Portal - Subscription Plan Management
+### Requirement 11: Platform Admin Portal - Subscription Plan Management
 
 **User Story:** As a Platform_Admin, I want to create and manage subscription plans, so that I can offer different pricing tiers to agencies.
 
@@ -166,7 +164,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 5. THE Frontend SHALL display features as a multi-select checklist (e.g., B2B Marketplace, Advanced Reports, API Access, Priority Support)
 6. THE Frontend SHALL show toast notification after successful subscription plan creation or update
 
-### Requirement 11: Platform Admin Portal - Commission Configuration
+### Requirement 12: Platform Admin Portal - Commission Configuration
 
 **User Story:** As a Platform_Admin, I want to configure commission rates for B2B marketplace transactions, so that the platform can generate revenue from agency-to-agency sales.
 
@@ -180,7 +178,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 6. THE Frontend SHALL show confirmation dialog before updating commission settings
 7. THE Frontend SHALL show toast notification after successful commission configuration update
 
-### Requirement 12: Platform Admin Portal - Agency Subscription Assignment
+### Requirement 13: Platform Admin Portal - Agency Subscription Assignment
 
 **User Story:** As a Platform_Admin, I want to assign and manage subscription plans for agencies, so that I can control their access to features.
 
@@ -194,7 +192,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 6. THE Frontend SHALL show confirmation dialog before changing subscription plan
 7. THE Frontend SHALL show toast notification after successful subscription assignment or change
 
-### Requirement 13: Platform Admin Portal - Revenue Dashboard
+### Requirement 14: Platform Admin Portal - Revenue Dashboard
 
 **User Story:** As a Platform_Admin, I want to view revenue metrics from subscriptions and commissions, so that I can monitor platform financial performance.
 
@@ -208,7 +206,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 6. THE Frontend SHALL display table of top 10 revenue-generating agencies with agency_name, subscription_plan, subscription_revenue, commission_revenue, and total_revenue
 7. THE Frontend SHALL allow filtering revenue data by date range (this month, last month, last 3 months, last 6 months, last year, custom range)
 
-### Requirement 14: Supplier Portal - Service Catalog Management
+### Requirement 15: Supplier Portal - Service Catalog Management
 
 **User Story:** As a Supplier, I want to create and manage my service catalog, so that agencies can browse and purchase my services.
 
@@ -222,7 +220,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 6. THE Frontend SHALL allow Supplier to publish services using publish button
 7. THE Frontend SHALL show toast notification after successful service creation or update
 
-### Requirement 15: Supplier Portal - Seasonal Pricing
+### Requirement 16: Supplier Portal - Seasonal Pricing
 
 **User Story:** As a Supplier, I want to set seasonal prices for date ranges, so that I can charge different prices during high seasons.
 
@@ -234,8 +232,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 4. THE Frontend SHALL validate that seasonal_price is greater than zero
 5. THE Frontend SHALL show toast notification after successful seasonal price creation
 
-
-### Requirement 16: Supplier Portal - Purchase Order Management
+### Requirement 17: Supplier Portal - Purchase Order Management
 
 **User Story:** As a Supplier, I want to view and manage purchase orders from agencies, so that I can approve or reject service requests.
 
@@ -249,7 +246,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 6. THE Frontend SHALL show confirmation dialog before approving or rejecting purchase orders
 7. THE Frontend SHALL show toast notification after successful purchase order approval or rejection
 
-### Requirement 17: Agency Portal - Supplier Browsing and Procurement
+### Requirement 18: Agency Portal - Supplier Browsing and Procurement
 
 **User Story:** As an Agency staff member, I want to browse suppliers and create purchase orders, so that I can procure services for my packages.
 
@@ -262,7 +259,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 5. THE Frontend SHALL calculate total_amount as sum of all po_items total_price
 6. THE Frontend SHALL show toast notification after successful purchase order creation
 
-### Requirement 18: Agency Portal - Package Management
+### Requirement 19: Agency Portal - Package Management
 
 **User Story:** As an Agency staff member, I want to create and manage package templates, so that I can reuse them for multiple journeys.
 
@@ -276,9 +273,9 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 6. THE Frontend SHALL calculate base_cost as sum of all package_services total_cost
 7. THE Frontend SHALL show toast notification after successful package creation or update
 
-### Requirement 19: Agency Portal - Journey Management
+### Requirement 20: Agency Portal - Journey Management with Service Tracking
 
-**User Story:** As an Agency staff member, I want to create journeys with specific dates and quota, so that I can manage actual trips.
+**User Story:** As an Agency staff member, I want to create journeys with specific dates, quota management, and service tracking, so that I can manage actual trips and monitor operational progress.
 
 #### Acceptance Criteria
 
@@ -286,10 +283,17 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 2. THE Frontend SHALL provide create journey form with fields: package_id, departure_date, return_date, total_quota
 3. THE Frontend SHALL validate that return_date is after departure_date
 4. THE Frontend SHALL display quota information: total_quota, confirmed_pax, available_quota
-5. THE Frontend SHALL show toast notification after successful journey creation or update
+5. WHEN a journey is created, THE Frontend SHALL automatically display all services copied from package_services to journey_services
+6. THE Frontend SHALL initialize journey_services with default tracking status: booking_status (not_booked), execution_status (pending), payment_status (unpaid)
+7. THE Frontend SHALL provide service tracking table with columns: service_type, service_name, booking_status, execution_status, payment_status, actions
+8. THE Frontend SHALL provide update status button for each service that opens dialog with status dropdowns
+9. WHEN booking_status is updated to 'booked', THE Frontend SHALL record booked_at timestamp
+10. WHEN booking_status is updated to 'confirmed', THE Frontend SHALL record confirmed_at timestamp
+11. WHEN execution_status is updated to 'completed', THE Frontend SHALL record executed_at timestamp
+12. THE Frontend SHALL display service tracking progress summary showing counts by status
+13. THE Frontend SHALL show status badges with appropriate colors for booking_status, execution_status, and payment_status
 
-
-### Requirement 20: Agency Portal - Customer Management
+### Requirement 21: Agency Portal - Customer Management
 
 **User Story:** As an Agency staff member, I want to manage customer information, so that I can maintain customer relationships and booking history.
 
@@ -302,7 +306,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 5. THE Frontend SHALL show customer booking history when viewing customer detail
 6. THE Frontend SHALL show toast notification after successful customer creation or update
 
-### Requirement 21: Agency Portal - Booking Creation
+### Requirement 22: Agency Portal - Booking Creation
 
 **User Story:** As an Agency staff member, I want to create bookings manually for customers, so that I can process walk-in, phone, and WhatsApp bookings.
 
@@ -315,7 +319,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 5. THE Frontend SHALL validate that journey available_quota is greater than or equal to total_pax
 6. THE Frontend SHALL show toast notification after successful booking creation
 
-### Requirement 22: Agency Portal - Booking Approval and Management
+### Requirement 23: Agency Portal - Booking Approval and Management
 
 **User Story:** As an Agency staff member, I want to approve bookings to confirm reservations, so that quota is properly managed.
 
@@ -328,7 +332,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 5. THE Frontend SHALL update journey quota display after booking approval or cancellation
 6. THE Frontend SHALL show toast notification after successful booking approval or cancellation
 
-### Requirement 23: Agency Portal - Traveler Management
+### Requirement 24: Agency Portal - Traveler Management
 
 **User Story:** As an Agency staff member, I want to add travelers to bookings with mahram validation, so that Umrah/Hajj bookings comply with religious requirements.
 
@@ -340,8 +344,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 4. THE Frontend SHALL validate that mahram_traveler_number references an existing male traveler in the same booking
 5. THE Frontend SHALL show toast notification after successful traveler addition
 
-
-### Requirement 24: Agency Portal - Document Management
+### Requirement 25: Agency Portal - Document Management
 
 **User Story:** As an Agency staff member, I want to track document submission and verification, so that I can ensure all required documents are collected before departure.
 
@@ -355,7 +358,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 6. THE Frontend SHALL highlight expiring documents where expiry_date is less than 30 days from today
 7. THE Frontend SHALL show toast notification after successful document status update
 
-### Requirement 25: Agency Portal - Task Management with Kanban Board
+### Requirement 26: Agency Portal - Task Management with Kanban Board
 
 **User Story:** As an Agency staff member, I want to manage tasks using a Kanban board, so that I can visualize task progress.
 
@@ -369,7 +372,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 6. THE Frontend SHALL provide add custom task button with fields: title, description, priority, due_date
 7. THE Frontend SHALL show toast notification after successful task status update or assignment
 
-### Requirement 26: Agency Portal - Pre-Departure Notification Configuration
+### Requirement 27: Agency Portal - Pre-Departure Notification Configuration
 
 **User Story:** As an Agency staff member, I want to configure automated pre-departure notifications, so that customers receive timely reminders.
 
@@ -381,7 +384,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 4. THE Frontend SHALL allow enabling or disabling notification schedules using toggle button
 5. THE Frontend SHALL show toast notification after successful notification schedule creation or update
 
-### Requirement 27: Agency Portal - Notification Template Management
+### Requirement 28: Agency Portal - Notification Template Management
 
 **User Story:** As an Agency staff member, I want to create notification templates with variables, so that I can customize customer communications.
 
@@ -394,8 +397,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 5. THE Frontend SHALL show template preview with sample data
 6. THE Frontend SHALL show toast notification after successful template creation or update
 
-
-### Requirement 28: Agency Portal - Payment Schedule and Tracking
+### Requirement 29: Agency Portal - Payment Schedule and Tracking
 
 **User Story:** As an Agency staff member, I want to track customer payment schedules, so that I can monitor payment status.
 
@@ -408,7 +410,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 5. THE Frontend SHALL display total outstanding amount for the booking
 6. THE Frontend SHALL show toast notification after successful payment recording
 
-### Requirement 29: Agency Portal - Itinerary Builder
+### Requirement 30: Agency Portal - Itinerary Builder
 
 **User Story:** As an Agency staff member, I want to build day-by-day itineraries for packages, so that customers can see detailed trip plans.
 
@@ -421,7 +423,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 5. THE Frontend SHALL allow reordering days and activities using drag-and-drop
 6. THE Frontend SHALL show toast notification after successful itinerary update
 
-### Requirement 30: Agency Portal - Supplier Bills and Payables
+### Requirement 31: Agency Portal - Supplier Bills and Payables
 
 **User Story:** As an Agency staff member, I want to track supplier bills and payments, so that I can manage payables.
 
@@ -434,7 +436,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 5. THE Frontend SHALL display total outstanding payables amount
 6. THE Frontend SHALL show toast notification after successful supplier payment recording
 
-### Requirement 31: Agency Portal - Communication Log
+### Requirement 32: Agency Portal - Communication Log
 
 **User Story:** As an Agency staff member, I want to log customer communications, so that I can track interaction history and follow-ups.
 
@@ -447,8 +449,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 5. THE Frontend SHALL provide mark as done button for follow-ups
 6. THE Frontend SHALL show toast notification after successful communication log creation
 
-
-### Requirement 32: Agency Portal - B2B Marketplace Service Publishing
+### Requirement 33: Agency Portal - B2B Marketplace Service Publishing
 
 **User Story:** As an Agency A staff member, I want to publish excess inventory to the marketplace, so that other agencies can purchase from me.
 
@@ -461,7 +462,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 5. THE Frontend SHALL allow publishing or unpublishing services using toggle button
 6. THE Frontend SHALL show toast notification after successful service publishing
 
-### Requirement 33: Agency Portal - B2B Marketplace Service Browsing
+### Requirement 34: Agency Portal - B2B Marketplace Service Browsing
 
 **User Story:** As an Agency B staff member, I want to browse marketplace services without seeing supplier names, so that I can purchase from other agencies.
 
@@ -474,7 +475,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 5. THE Frontend SHALL maintain shopping cart state for selected marketplace services
 6. THE Frontend SHALL show toast notification when adding services to cart
 
-### Requirement 34: Agency Portal - B2B Marketplace Order Creation
+### Requirement 35: Agency Portal - B2B Marketplace Order Creation
 
 **User Story:** As an Agency B staff member, I want to create orders to other agencies, so that I can purchase marketplace services.
 
@@ -487,7 +488,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 5. THE Frontend SHALL clear cart after successful order creation
 6. THE Frontend SHALL show toast notification after successful order creation
 
-### Requirement 35: Agency Portal - B2B Marketplace Order Management
+### Requirement 36: Agency Portal - B2B Marketplace Order Management
 
 **User Story:** As an Agency A staff member, I want to approve or reject orders from other agencies, so that I can control my inventory sales.
 
@@ -500,8 +501,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 5. THE Frontend SHALL show confirmation dialog before approving or rejecting orders
 6. THE Frontend SHALL show toast notification after successful order approval or rejection
 
-
-### Requirement 36: Agency Portal - Profitability Tracking
+### Requirement 37: Agency Portal - Profitability Tracking
 
 **User Story:** As an Agency staff member, I want to track booking profitability, so that I can identify high and low margin bookings.
 
@@ -514,7 +514,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 5. THE Frontend SHALL allow filtering profitability data by package_type and date range
 6. THE Frontend SHALL display booking detail with revenue, cost, gross_profit, and gross_margin_percentage
 
-### Requirement 37: Shared Components - Data Table
+### Requirement 38: Shared Components - Data Table
 
 **User Story:** As a developer, I want reusable data table component, so that I can display tabular data consistently across the application.
 
@@ -527,7 +527,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 5. THE Frontend SHALL support global search filtering across all columns
 6. THE Frontend SHALL emit events: onRowSelect, onRowEdit, onRowDelete
 
-### Requirement 38: Shared Components - Page Header
+### Requirement 39: Shared Components - Page Header
 
 **User Story:** As a developer, I want reusable page header component, so that pages have consistent headers with breadcrumbs and actions.
 
@@ -538,8 +538,10 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 3. THE Frontend SHALL display action buttons on the right side of the header
 4. THE Frontend SHALL support icon buttons using Lucide icons
 5. THE Frontend SHALL be responsive and stack actions vertically on mobile
+6. THE Frontend SHALL use breadcrumb format: Home > Section > Subsection > Current Page
+7. THE Frontend SHALL display Lucide home icon for breadcrumb home link
 
-### Requirement 39: Shared Components - Confirmation Dialog
+### Requirement 40: Shared Components - Confirmation Dialog
 
 **User Story:** As a developer, I want reusable confirmation dialog component, so that I can request user confirmation before destructive actions.
 
@@ -551,8 +553,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 4. THE Frontend SHALL close dialog after user clicks accept or reject
 5. THE Frontend SHALL support danger variant with red accept button for destructive actions
 
-
-### Requirement 40: Shared Components - Loading Spinner
+### Requirement 41: Shared Components - Loading Spinner
 
 **User Story:** As a developer, I want reusable loading spinner component, so that I can indicate loading states consistently.
 
@@ -564,7 +565,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 4. THE Frontend SHALL support size options: small, medium, large
 5. THE Frontend SHALL use PrimeNG ProgressSpinner component
 
-### Requirement 41: Form Validation and Error Display
+### Requirement 42: Form Validation and Error Display
 
 **User Story:** As a developer, I want consistent form validation and error display, so that users receive clear feedback on input errors.
 
@@ -578,7 +579,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 6. THE Frontend SHALL disable submit button when form is invalid
 7. THE Frontend SHALL show toast notification with error message when form submission fails
 
-### Requirement 42: Responsive Design and Mobile Support
+### Requirement 43: Responsive Design and Mobile Support
 
 **User Story:** As a user, I want the application to work on mobile devices, so that I can access it from anywhere.
 
@@ -590,7 +591,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 4. THE Frontend SHALL make data tables horizontally scrollable on mobile devices
 5. THE Frontend SHALL use responsive breakpoints: sm (640px), md (768px), lg (1024px), xl (1280px)
 
-### Requirement 43: Toast Notifications
+### Requirement 44: Toast Notifications
 
 **User Story:** As a user, I want to receive feedback notifications for my actions, so that I know if operations succeeded or failed.
 
@@ -604,7 +605,7 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 6. THE Frontend SHALL auto-dismiss toasts after 5 seconds
 7. THE Frontend SHALL allow manual dismissal by clicking close button
 
-### Requirement 44: Error Handling and User Feedback
+### Requirement 45: Error Handling and User Feedback
 
 **User Story:** As a user, I want clear error messages when operations fail, so that I understand what went wrong.
 
@@ -616,3 +617,299 @@ This document specifies the requirements for Phase 1 MVP of the Tour & Travel Ag
 4. WHEN HTTP request fails with 404 Not Found, THE Frontend SHALL display "Resource not found" message
 5. WHEN HTTP request fails with 500 Internal Server Error, THE Frontend SHALL display "An unexpected error occurred. Please try again later" message
 6. THE Frontend SHALL log all errors to console for debugging
+
+### Requirement 46: Mock Data Infrastructure
+
+**User Story:** As a developer, I want a comprehensive mock data system, so that I can develop and test the frontend before the backend API is ready.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL use environment.apiReady flag to toggle between mock and real API services
+2. THE Frontend SHALL define API service interfaces (IAgencyApiService, ISupplierApiService, etc.) for all feature services
+3. THE Frontend SHALL implement mock services that conform to the API service interfaces
+4. THE Frontend SHALL use BaseMockData utility class with methods for generating random data (randomInt, randomElement, randomDate, randomBoolean)
+5. THE Frontend SHALL create mock data factories for all entities (Agency, Supplier, Service, Package, Journey, Customer, Booking, etc.)
+6. THE Frontend SHALL implement CRUD operations in mock services with simulated delays
+7. THE Frontend SHALL use MockStateService for centralized in-memory state management across all mock services
+8. THE Frontend SHALL maintain relationship integrity in mock data (e.g., bookings reference valid journeys, travelers reference valid bookings)
+9. THE Frontend SHALL configure conditional service providers in app.config.ts using InjectionToken and factory providers
+10. THE Frontend SHALL log mock service operations to console for debugging
+
+### Requirement 47: Form Components with View/Edit/Create Modes
+
+**User Story:** As a developer, I want reusable form components that support view, edit, and create modes, so that I can maintain consistency across all forms.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL support three form modes: view, edit, and create
+2. WHEN in view mode, THE Frontend SHALL display read-only fields with "Edit" and "Back" buttons in page header actions
+3. WHEN in edit mode, THE Frontend SHALL enable fields with "Save" and "Cancel" buttons in page header actions
+4. WHEN in create mode, THE Frontend SHALL enable fields with "Create" and "Cancel" buttons in page header actions
+5. THE Frontend SHALL use PageHeaderComponent with breadcrumbs in all form components
+6. THE Frontend SHALL organize form fields into sections with gradient headers and icons
+7. THE Frontend SHALL show confirmation dialog when Cancel is clicked with unsaved changes
+8. THE Frontend SHALL use size="small" for all PrimeNG components in forms
+9. THE Frontend SHALL use class="p-inputtext-sm" for all input and textarea elements
+10. THE Frontend SHALL include form actions footer with info text and action buttons using app-action-button component
+
+### Requirement 48: Public Landing Page
+
+**User Story:** As a visitor, I want to view a landing page that explains the platform, so that I can understand the features before registering.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL display landing page at root URL (/)
+2. THE Frontend SHALL display hero section with platform name "Jourva" and tagline "Complete Travel Agency ERP & B2B Marketplace"
+3. THE Frontend SHALL display features section with 4 feature cards (Agency Management, Supplier Network, B2B Marketplace, Booking Management)
+4. THE Frontend SHALL display benefits section with 3 benefit cards for different user types (Platform Admins, Travel Agencies, Suppliers)
+5. THE Frontend SHALL display footer with company name, links (About, Features, Contact, Privacy Policy, Terms of Service), and contact information
+6. THE Frontend SHALL provide "Login" and "Register as Supplier" CTA buttons in hero section
+7. THE Frontend SHALL implement responsive layout that stacks on mobile devices
+8. THE Frontend SHALL use LandingLayoutComponent with LandingNavComponent for navigation
+9. THE Frontend SHALL implement smooth scroll and fade-in animations on scroll
+10. THE Frontend SHALL optimize landing page assets with lazy loading and WebP images
+
+### Requirement 49: Supplier Registration
+
+**User Story:** As a Supplier, I want to register on the platform via a public registration form, so that I can offer services to agencies after approval.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL provide supplier registration form at /register/supplier route
+2. THE Frontend SHALL require company_name, business_type, email, phone, and business_license_number fields
+3. THE Frontend SHALL use p-dropdown with size="small" for business_type selection
+4. THE Frontend SHALL validate email format and display "Invalid email format" message
+5. THE Frontend SHALL validate phone format and display "Invalid phone format" message
+6. THE Frontend SHALL validate that business_license_number is not empty
+7. THE Frontend SHALL display success message after registration: "Registration submitted successfully. You will receive an email once your account is approved."
+8. THE Frontend SHALL redirect to login page after successful registration
+9. THE Frontend SHALL show toast notification with error message if registration fails
+10. THE Frontend SHALL use SupplierRegistrationComponent with reactive forms validation
+
+
+### Requirement 50: Standardized API Response Handling
+
+**User Story:** As a frontend developer, I want to handle standardized API responses with snake_case naming convention, so that API integration is consistent and predictable.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL expect all API responses to follow the structure: { success: boolean, data: any, message: string, timestamp: string }
+2. THE Frontend SHALL expect all API error responses to follow the structure: { success: false, error: { code: string, message: string, details: array }, timestamp: string }
+3. THE Frontend SHALL expect all paginated API responses to include pagination metadata: { page, page_size, total_items, total_pages }
+4. THE Frontend SHALL expect all JSON property names from API to be in snake_case format
+5. THE Frontend SHALL create TypeScript interfaces matching backend response structures with snake_case properties
+6. THE Frontend SHALL use HttpInterceptor to automatically extract data from ApiResponse wrapper before passing to components
+7. THE Frontend SHALL use HttpInterceptor to handle error responses and display appropriate toast notifications based on error codes
+8. WHEN error code is "VALIDATION_ERROR", THE Frontend SHALL display field-specific validation errors
+9. WHEN error code is "UNAUTHORIZED", THE Frontend SHALL redirect to login page
+10. WHEN error code is "FORBIDDEN", THE Frontend SHALL display permission error toast
+11. WHEN error code is "NOT_FOUND", THE Frontend SHALL display not found error toast
+12. WHEN error code is "BUSINESS_RULE_VIOLATION", THE Frontend SHALL display business rule error toast with details
+13. WHEN error code is "INTERNAL_SERVER_ERROR", THE Frontend SHALL display generic error toast
+14. THE Frontend SHALL create ApiResponse<T>, PaginatedApiResponse<T>, and ApiErrorResponse TypeScript interfaces
+15. THE Frontend SHALL handle pagination metadata in table components automatically
+
+
+---
+
+## Self-Registration with KYC Verification Requirements
+
+### Requirement 51: Agency Self-Registration Page
+
+**User Story:** As a potential agency owner, I want to register my travel agency via a public registration form, so that I can start using the platform.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL provide a public route /register/agency accessible without authentication
+2. THE Frontend SHALL display a registration form with fields: company_name, owner_name, email, phone, business_type (dropdown), password, confirm_password
+3. THE Frontend SHALL validate that all fields are required
+4. THE Frontend SHALL validate email format
+5. THE Frontend SHALL validate password requirements (min 8 chars, 1 uppercase, 1 lowercase, 1 number)
+6. THE Frontend SHALL validate that password matches confirm_password
+7. WHEN user submits valid form, THE Frontend SHALL call POST /api/auth/register/agency
+8. WHEN registration succeeds, THE Frontend SHALL redirect to /documents/upload with success message
+9. WHEN registration fails, THE Frontend SHALL display error message from API
+10. THE Frontend SHALL provide link to login page for existing users
+
+### Requirement 52: Supplier Self-Registration Page with Service Type Selection
+
+**User Story:** As a potential supplier, I want to register my business and specify which services I will provide, so that the system can generate appropriate document requirements.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL provide a public route /register/supplier accessible without authentication
+2. THE Frontend SHALL display a registration form with fields: company_name, owner_name, email, phone, business_type (dropdown), service_types (multi-select), password, confirm_password, address, city, province, postal_code, country
+3. THE Frontend SHALL provide service_types multi-select with options: Hotel, Flight, Visa, Transport, Guide, Insurance, Catering, Handling
+4. THE Frontend SHALL validate that at least one service_type is selected
+5. THE Frontend SHALL validate all required fields
+6. THE Frontend SHALL validate email format and password requirements
+7. WHEN user submits valid form, THE Frontend SHALL call POST /api/auth/register/supplier
+8. WHEN registration succeeds, THE Frontend SHALL redirect to /documents/upload with success message
+9. THE Frontend SHALL provide link to login page for existing users
+
+### Requirement 53: Document Upload Page
+
+**User Story:** As an agency or supplier, I want to upload required KYC documents, so that I can get verified and access the platform.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL provide route /documents/upload accessible only to authenticated users
+2. THE Frontend SHALL fetch document checklist from GET /api/documents
+3. THE Frontend SHALL display document checklist grouped by category (Identity, Business Legal, Operational, Service Specific)
+4. THE Frontend SHALL indicate which documents are mandatory vs optional
+5. THE Frontend SHALL display document status (Not Uploaded, Pending, Verified, Rejected) with color-coded badges
+6. THE Frontend SHALL show rejection reason for rejected documents
+7. THE Frontend SHALL provide file upload button for each document
+8. THE Frontend SHALL validate file size (max 10MB) before upload
+9. THE Frontend SHALL validate file extension (.pdf, .jpg, .jpeg, .png, .doc, .docx) before upload
+10. WHEN user selects file, THE Frontend SHALL call POST /api/documents/upload with multipart/form-data
+11. WHEN upload succeeds, THE Frontend SHALL update document list and show success message
+12. WHEN upload fails, THE Frontend SHALL display error message
+13. THE Frontend SHALL allow re-upload for rejected documents
+14. THE Frontend SHALL display document completion progress bar (e.g., "7/10 documents uploaded")
+15. WHEN all mandatory documents are uploaded, THE Frontend SHALL display "Awaiting Verification" message
+
+### Requirement 54: Document Progress Widget
+
+**User Story:** As an agency or supplier, I want to see my verification progress, so that I know what actions are required.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL fetch document progress from GET /api/documents/progress
+2. THE Frontend SHALL display verification status badge (Pending Documents, Awaiting Approval, Verified, Rejected)
+3. THE Frontend SHALL display document completion percentage
+4. THE Frontend SHALL display counts: total mandatory, uploaded, verified, rejected
+5. THE Frontend SHALL display verification attempts (e.g., "Attempt 1 of 3")
+6. WHEN verification_status is 'rejected', THE Frontend SHALL display rejection reason prominently
+7. WHEN verification_attempts >= max_attempts, THE Frontend SHALL display "Maximum attempts reached. Contact support." message
+8. THE Frontend SHALL refresh progress after each document upload
+
+### Requirement 55: Platform Admin Verification Queue Page
+
+**User Story:** As a platform admin, I want to see a list of entities awaiting verification, so that I can review and approve/reject them.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL provide route /admin/verification-queue accessible only to platform_admin
+2. THE Frontend SHALL fetch verification queue from GET /api/admin/verification-queue
+3. THE Frontend SHALL display table with columns: Entity Type, Entity Code, Company Name, Owner Name, Email, Status, Documents Uploaded, Documents Verified, Created Date, Actions
+4. THE Frontend SHALL provide filters: entity_type (Agency/Supplier), verification_status, date_range
+5. THE Frontend SHALL support pagination
+6. THE Frontend SHALL provide "View Details" button for each entity
+7. THE Frontend SHALL highlight entities with status "Awaiting Approval" for priority review
+8. THE Frontend SHALL display badge colors: Pending Documents (gray), Awaiting Approval (orange), Verified (green), Rejected (red)
+
+### Requirement 56: Platform Admin Entity Verification Detail Page
+
+**User Story:** As a platform admin, I want to view entity details and all uploaded documents, so that I can verify and approve/reject the entity.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL provide route /admin/verification/:entityType/:entityId accessible only to platform_admin
+2. THE Frontend SHALL fetch entity details from GET /api/admin/verification/:entityType/:entityId
+3. THE Frontend SHALL display entity information: Company Name, Owner Name, Email, Phone, Business Type, Address, Verification Status, Verification Attempts
+4. THE Frontend SHALL display list of all documents with: Document Label, Category, Mandatory/Optional, File Name, Status, Uploaded Date
+5. THE Frontend SHALL provide "Preview" button to view document in new tab or modal
+6. THE Frontend SHALL provide "Verify" button (green) for each pending document
+7. THE Frontend SHALL provide "Reject" button (red) for each pending document with rejection reason input
+8. WHEN admin clicks "Verify", THE Frontend SHALL call PUT /api/admin/documents/:id/verify
+9. WHEN admin clicks "Reject", THE Frontend SHALL show rejection reason dialog, then call PUT /api/admin/documents/:id/reject
+10. THE Frontend SHALL provide "Approve Entity" button (enabled only when all mandatory documents are verified)
+11. THE Frontend SHALL provide "Reject Entity" button with rejection reason input
+12. WHEN admin clicks "Approve Entity", THE Frontend SHALL show confirmation dialog, then call POST /api/admin/verification/:entityType/:entityId/approve
+13. WHEN admin clicks "Reject Entity", THE Frontend SHALL show rejection reason dialog, then call POST /api/admin/verification/:entityType/:entityId/reject
+14. THE Frontend SHALL refresh entity details after each action
+15. THE Frontend SHALL display success/error toast notifications for all actions
+
+### Requirement 57: Access Control Based on Verification Status
+
+**User Story:** As an unverified agency or supplier, I want to be restricted to document upload page only, so that I complete verification before accessing other features.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL check verification_status from JWT token or user profile
+2. WHEN user logs in with verification_status 'pending_documents' or 'awaiting_approval', THE Frontend SHALL redirect to /documents/upload
+3. THE Frontend SHALL use VerificationGuard to protect all routes except /documents/upload
+4. WHEN unverified user tries to access restricted route, THE Frontend SHALL redirect to /documents/upload with message "Please complete document verification"
+5. WHEN user has verification_status 'verified', THE Frontend SHALL allow access to all routes
+6. THE Frontend SHALL display verification status in header/sidebar for unverified users
+
+### Requirement 58: Document Preview Modal
+
+**User Story:** As a platform admin, I want to preview uploaded documents without downloading, so that I can quickly review documents.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL provide document preview modal component
+2. WHEN admin clicks "Preview" button, THE Frontend SHALL open modal with document preview
+3. THE Frontend SHALL display PDF files using PDF viewer (e.g., ng2-pdf-viewer or iframe)
+4. THE Frontend SHALL display image files (.jpg, .jpeg, .png) using img tag
+5. THE Frontend SHALL display "Download" button to download original file
+6. THE Frontend SHALL display "Close" button to close modal
+7. THE Frontend SHALL handle preview errors gracefully (e.g., "Preview not available. Please download.")
+
+### Requirement 59: Re-submission Flow for Rejected Entities
+
+**User Story:** As a rejected agency or supplier, I want to re-upload rejected documents and re-submit for verification, so that I can correct issues and get approved.
+
+#### Acceptance Criteria
+
+1. WHEN entity is rejected, THE Frontend SHALL display rejection reason prominently on /documents/upload page
+2. THE Frontend SHALL highlight rejected documents in red
+3. THE Frontend SHALL display rejection reason for each rejected document
+4. THE Frontend SHALL allow re-upload for rejected documents
+5. WHEN user re-uploads rejected document, THE Frontend SHALL call POST /api/documents/upload (same endpoint)
+6. THE Frontend SHALL display remaining verification attempts (e.g., "2 attempts remaining")
+7. WHEN verification_attempts >= max_attempts, THE Frontend SHALL disable upload buttons and display "Maximum attempts reached. Contact support."
+8. WHEN all mandatory documents are re-uploaded, THE Frontend SHALL display "Re-submitted for verification" message
+
+### Requirement 60: Email Notification Integration
+
+**User Story:** As an agency or supplier, I want to receive email notifications about my verification status, so that I stay informed.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL display message "Check your email for registration confirmation" after successful registration
+2. THE Frontend SHALL display message "You will receive an email notification once verification is complete" on /documents/upload page
+3. THE Frontend SHALL provide "Resend Verification Email" button (optional feature)
+4. THE Frontend SHALL handle email-related errors gracefully (backend handles email sending)
+
+### Requirement 61: Responsive Design for Registration and Document Upload
+
+**User Story:** As a user on mobile device, I want registration and document upload pages to be mobile-friendly, so that I can complete verification on any device.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL use responsive design for registration forms (mobile, tablet, desktop)
+2. THE Frontend SHALL use responsive design for document upload page
+3. THE Frontend SHALL stack form fields vertically on mobile devices
+4. THE Frontend SHALL use mobile-friendly file upload buttons
+5. THE Frontend SHALL display document checklist in mobile-friendly layout (cards instead of table)
+6. THE Frontend SHALL ensure all buttons and inputs are touch-friendly (min 44px height)
+
+### Requirement 62: Loading States and Error Handling
+
+**User Story:** As a user, I want to see loading indicators and clear error messages, so that I understand what's happening.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL display loading spinner during registration API call
+2. THE Frontend SHALL display loading spinner during document upload
+3. THE Frontend SHALL display loading spinner while fetching document checklist
+4. THE Frontend SHALL disable submit buttons during API calls to prevent double submission
+5. THE Frontend SHALL display error messages from API in toast notifications
+6. THE Frontend SHALL display field-level validation errors inline
+7. THE Frontend SHALL handle network errors gracefully with retry option
+
+### Requirement 63: Document Upload Progress Indicator
+
+**User Story:** As a user uploading large documents, I want to see upload progress, so that I know the upload is working.
+
+#### Acceptance Criteria
+
+1. THE Frontend SHALL display upload progress bar during file upload
+2. THE Frontend SHALL show percentage (e.g., "Uploading... 45%")
+3. THE Frontend SHALL allow cancellation of ongoing upload (optional)
+4. THE Frontend SHALL display success message when upload completes
+5. THE Frontend SHALL handle upload failures with clear error message
+

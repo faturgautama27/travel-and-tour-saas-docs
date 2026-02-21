@@ -68,11 +68,18 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 
 #### Acceptance Criteria
 
-1. WHEN a Supplier registers, THE System SHALL create a supplier record with status 'pending'
-2. THE System SHALL generate a unique supplier_code
-3. WHEN Platform_Admin approves a supplier, THE System SHALL update status to 'active' and record approved_at timestamp
-4. WHEN Platform_Admin rejects a supplier, THE System SHALL update status to 'rejected'
-5. THE System SHALL only allow active suppliers to publish services
+1. WHEN a Supplier registers via public registration form, THE System SHALL create a supplier record with status 'pending'
+2. THE System SHALL generate a unique supplier_code in format SUP-YYMMDD-XXX
+3. THE System SHALL require company_name, business_type, email, phone, and business_license_number
+4. THE System SHALL validate email format and uniqueness across all suppliers
+5. THE System SHALL validate phone format
+6. THE System SHALL hash the password using BCrypt with salt rounds of 12
+7. THE System SHALL validate password requirements (minimum 8 characters, at least 1 uppercase, 1 lowercase, 1 number)
+8. THE System SHALL create a user account with user_type 'supplier_staff' linked to the supplier
+9. WHEN Platform_Admin approves a supplier, THE System SHALL update status to 'active' and record approved_at timestamp and approved_by user
+10. WHEN Platform_Admin rejects a supplier, THE System SHALL update status to 'rejected' and record rejection_reason
+11. THE System SHALL only allow active suppliers to publish services
+12. THE System SHALL send email notification to supplier when registration is submitted, approved, or rejected
 
 ### Requirement 5: Supplier Service Management with Type-Specific Fields
 
@@ -88,61 +95,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 6. THE System SHALL validate that base_price is greater than zero
 7. WHEN a Supplier publishes a service, THE System SHALL set status to 'published' and record published_at timestamp
 
-### Requirement 6: Subscription Plan Management
-
-**User Story:** As a Platform_Admin, I want to create and manage subscription plans, so that I can offer different pricing tiers to agencies.
-
-#### Acceptance Criteria
-
-1. WHEN Platform_Admin creates a subscription plan, THE System SHALL validate that plan_name, monthly_price, and annual_price are provided
-2. THE System SHALL support plan_name values: basic, pro, enterprise, custom
-3. THE System SHALL validate that monthly_price and annual_price are greater than zero
-4. THE System SHALL store features as a JSON array of feature codes
-5. THE System SHALL allow Platform_Admin to activate or deactivate subscription plans
-6. THE System SHALL prevent deletion of subscription plans that are currently assigned to agencies
-
-### Requirement 7: Commission Configuration Management
-
-**User Story:** As a Platform_Admin, I want to configure commission rates for B2B marketplace transactions, so that the platform can generate revenue from agency-to-agency sales.
-
-#### Acceptance Criteria
-
-1. WHEN Platform_Admin updates commission configuration, THE System SHALL validate that commission_type is either 'percentage' or 'fixed'
-2. WHEN commission_type is 'percentage', THE System SHALL validate that commission_rate is between 0 and 100
-3. WHEN commission_type is 'fixed', THE System SHALL validate that commission_rate is greater than zero
-4. THE System SHALL record commission configuration history with effective_date and changed_by
-5. WHEN querying current commission rate, THE System SHALL return the configuration with the most recent effective_date
-6. THE System SHALL calculate commission amount for B2B marketplace transactions based on current commission configuration
-
-### Requirement 8: Agency Subscription Assignment
-
-**User Story:** As a Platform_Admin, I want to assign and manage subscription plans for agencies, so that I can control their access to features and billing.
-
-#### Acceptance Criteria
-
-1. WHEN Platform_Admin assigns a subscription to an agency, THE System SHALL require plan_id, billing_cycle, and subscription_start_date
-2. THE System SHALL support billing_cycle values: monthly, annual
-3. WHEN billing_cycle is 'monthly', THE System SHALL calculate subscription_end_date as subscription_start_date + 30 days
-4. WHEN billing_cycle is 'annual', THE System SHALL calculate subscription_end_date as subscription_start_date + 365 days
-5. THE System SHALL set subscription_status to 'active' when subscription_start_date <= current_date < subscription_end_date
-6. THE System SHALL set subscription_status to 'expired' when current_date >= subscription_end_date
-7. THE System SHALL allow Platform_Admin to upgrade or downgrade agency subscription plans
-
-### Requirement 9: Revenue Tracking and Reporting
-
-**User Story:** As a Platform_Admin, I want to track revenue from subscriptions and commissions, so that I can monitor platform financial performance.
-
-#### Acceptance Criteria
-
-1. THE System SHALL calculate total subscription revenue as sum of all active agency subscriptions
-2. THE System SHALL calculate Monthly Recurring Revenue (MRR) from monthly subscriptions
-3. THE System SHALL calculate Annual Recurring Revenue (ARR) from annual subscriptions
-4. THE System SHALL track commission revenue from approved B2B marketplace transactions
-5. THE System SHALL provide revenue breakdown by subscription plan (basic, pro, enterprise, custom)
-6. THE System SHALL provide commission revenue trend data for the last 12 months
-7. THE System SHALL identify top 10 revenue-generating agencies with subscription_revenue, commission_revenue, and total_revenue
-
-### Requirement 10: Seasonal Pricing Management
+### Requirement 6: Seasonal Pricing Management
 
 **User Story:** As a Supplier, I want to set seasonal prices for specific date ranges, so that I can charge different prices during high seasons.
 
@@ -154,7 +107,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. WHEN no seasonal price exists for a date, THE System SHALL return the base_price
 5. IF multiple seasonal prices overlap for a date, THE System SHALL return the most recently created seasonal price
 
-### Requirement 11: Purchase Order Creation and Workflow
+### Requirement 7: Purchase Order Creation and Workflow
 
 **User Story:** As an Agency staff member, I want to create purchase orders to suppliers, so that I can procure services for my packages.
 
@@ -166,7 +119,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. WHEN a purchase order is created, THE System SHALL set status to 'pending'
 5. THE System SHALL send notification to the supplier when a purchase order is created
 
-### Requirement 12: Purchase Order Approval by Supplier
+### Requirement 8: Purchase Order Approval by Supplier
 
 **User Story:** As a Supplier, I want to approve or reject purchase orders, so that I can confirm service availability to agencies.
 
@@ -178,22 +131,29 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL send notification to the agency when a purchase order is approved or rejected
 5. THE System SHALL allow purchase order deletion only when status is 'pending'
 
-### Requirement 13: Package Management as Templates
+### Requirement 9: Package Management with Service Selection
 
-**User Story:** As an Agency staff member, I want to create reusable package templates without specific dates, so that I can use them for multiple journeys.
+**User Story:** As an Agency staff member, I want to create reusable package templates with service selection from my inventory, so that I can use them for multiple journeys.
 
 #### Acceptance Criteria
 
 1. WHEN an Agency creates a package, THE System SHALL generate a unique package_code in format PKG-{AGENCY_CODE}-{SEQUENCE}
 2. THE System SHALL support package types: umrah, hajj, halal_tour, general_tour, custom
-3. THE System SHALL require name, duration_days, base_cost, and selling_price
+3. THE System SHALL require name, duration_days, markup_type, markup_value, and selling_price
 4. THE System SHALL validate that selling_price is greater than or equal to base_cost
 5. THE System SHALL NOT include departure_date or return_date fields in packages
-6. THE System SHALL allow packages to reference services from approved purchase orders
+6. THE System SHALL allow agencies to select services from two sources:
+   - Approved purchase order items (po_items from approved purchase_orders)
+   - Agency services (agency_services purchased from B2B marketplace)
+7. WHEN services are added to a package, THE System SHALL save them to package_services table with fields: package_id, supplier_service_id (if from PO), agency_service_id (if from marketplace), source_type, quantity, unit_cost, total_cost
+8. THE System SHALL calculate base_cost automatically as sum of all package_services total_cost (quantity × unit_cost)
+9. WHEN markup_type is 'percentage', THE System SHALL calculate selling_price as base_cost × (1 + markup_value/100)
+10. WHEN markup_type is 'fixed', THE System SHALL calculate selling_price as base_cost + markup_value
+11. THE System SHALL provide API endpoint GET /api/packages/available-services to return combined list of po_items and agency_services
 
-### Requirement 14: Journey Management with Dates and Quota
+### Requirement 10: Journey Management with Service Tracking
 
-**User Story:** As an Agency staff member, I want to create journeys with specific dates and quota management, so that I can manage actual trips.
+**User Story:** As an Agency staff member, I want to create journeys with specific dates, quota management, and service tracking, so that I can manage actual trips and monitor operational progress.
 
 #### Acceptance Criteria
 
@@ -202,8 +162,21 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 3. THE System SHALL initialize confirmed_pax to 0 and available_quota to total_quota
 4. THE System SHALL validate that return_date is after departure_date
 5. THE System SHALL maintain the invariant: total_quota = confirmed_pax + available_quota
+6. WHEN a journey is created, THE System SHALL automatically copy all services from package_services to journey_services table
+7. THE System SHALL initialize journey_services with default tracking status:
+   - booking_status: not_booked
+   - execution_status: pending
+   - payment_status: unpaid
+8. THE System SHALL provide API endpoint GET /api/journeys/{id}/services to return journey services with tracking status
+9. THE System SHALL provide API endpoint PATCH /api/journeys/{id}/services/{serviceId}/status to update service tracking status
+10. WHEN booking_status is updated to 'booked', THE System SHALL set booked_at timestamp
+11. WHEN booking_status is updated to 'confirmed', THE System SHALL set confirmed_at timestamp
+12. WHEN execution_status is updated to 'completed', THE System SHALL set executed_at timestamp
+13. THE System SHALL support booking_status values: not_booked, booked, confirmed, cancelled
+14. THE System SHALL support execution_status values: pending, in_progress, completed, failed
+15. THE System SHALL support payment_status values: unpaid, partially_paid, paid
 
-### Requirement 15: Customer Management
+### Requirement 11: Customer Management
 
 **User Story:** As an Agency staff member, I want to manage customer information, so that I can maintain customer relationships and booking history.
 
@@ -215,7 +188,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. IF email is provided, THE System SHALL validate that email is unique within the agency
 5. THE System SHALL automatically update total_bookings, total_spent, and last_booking_date when bookings are created or modified
 
-### Requirement 16: Booking Creation with Staff Input
+### Requirement 12: Booking Creation with Staff Input
 
 **User Story:** As an Agency staff member, I want to create bookings manually for customers, so that I can process walk-in, phone, and WhatsApp bookings.
 
@@ -227,7 +200,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. WHEN a booking is created, THE System SHALL set booking_status to 'pending'
 5. THE System SHALL support booking_source values: staff, phone, walk_in, whatsapp
 
-### Requirement 17: Booking Approval and Quota Management
+### Requirement 13: Booking Approval and Quota Management
 
 **User Story:** As an Agency staff member, I want to approve bookings to confirm reservations, so that quota is properly managed.
 
@@ -239,7 +212,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL prevent booking approval if journey available_quota is less than booking total_pax
 5. WHEN a booking is cancelled, THE System SHALL increment journey available_quota and decrement confirmed_pax by booking total_pax
 
-### Requirement 18: Traveler Management with Mahram Validation
+### Requirement 14: Traveler Management with Mahram Validation
 
 **User Story:** As an Agency staff member, I want to add travelers to bookings with mahram validation, so that Umrah/Hajj bookings comply with religious requirements.
 
@@ -251,7 +224,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL validate that the referenced mahram traveler exists and is male
 5. THE System SHALL assign sequential traveler_number starting from 1 within each booking
 
-### Requirement 19: Document Checklist Auto-Generation
+### Requirement 15: Document Checklist Auto-Generation
 
 **User Story:** As an Agency staff member, I want document checklists to be automatically generated when bookings are confirmed, so that I can track required documents.
 
@@ -263,7 +236,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL calculate document completion percentage as (verified documents / total required documents) × 100
 5. THE System SHALL identify expiring documents where expiry_date is less than 30 days from today
 
-### Requirement 20: Document Status Tracking and Validation
+### Requirement 16: Document Status Tracking and Validation
 
 **User Story:** As an Agency staff member, I want to track document submission and verification, so that I can ensure all required documents are collected before departure.
 
@@ -276,7 +249,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 5. FOR passport documents, THE System SHALL validate that expiry_date is more than 6 months after journey departure_date
 6. FOR visa documents, THE System SHALL validate that expiry_date is after journey departure_date
 
-### Requirement 21: Task Checklist Auto-Generation
+### Requirement 17: Task Checklist Auto-Generation
 
 **User Story:** As an Agency staff member, I want task checklists to be automatically generated for bookings, so that I can track operational tasks.
 
@@ -288,7 +261,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL support task status values: to_do, in_progress, done
 5. THE System SHALL calculate task completion percentage as (completed tasks / total tasks) × 100
 
-### Requirement 22: H-30 and H-7 Task Auto-Generation
+### Requirement 18: H-30 and H-7 Task Auto-Generation
 
 **User Story:** As an Agency staff member, I want tasks to be automatically generated at H-30 and H-7 before departure, so that critical pre-departure tasks are not missed.
 
@@ -300,7 +273,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. FOR each identified booking, THE System SHALL generate tasks from task_templates with trigger_stage 'h_7'
 5. THE System SHALL run H-30 and H-7 task generation jobs daily at 08:00 AM
 
-### Requirement 23: Task Management with Kanban Board
+### Requirement 19: Task Management with Kanban Board
 
 **User Story:** As an Agency staff member, I want to manage tasks using a Kanban board, so that I can visualize task progress.
 
@@ -312,7 +285,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL allow filtering tasks by status, assigned user, and due date
 5. THE System SHALL allow creation of custom tasks that are not from templates
 
-### Requirement 24: Pre-Departure Notification Scheduling
+### Requirement 20: Pre-Departure Notification Scheduling
 
 **User Story:** As an Agency staff member, I want to configure automated pre-departure notifications, so that customers receive timely reminders.
 
@@ -324,7 +297,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL support notification templates with customizable subject and body
 5. THE System SHALL support template variables including customer_name, package_name, departure_date, and booking_reference
 
-### Requirement 25: Daily Notification Job Execution
+### Requirement 21: Daily Notification Job Execution
 
 **User Story:** As an Agency staff member, I want notifications to be sent automatically based on schedules, so that customers receive timely information.
 
@@ -336,7 +309,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL replace template variables with actual booking data
 5. THE System SHALL send notifications via email and in-app channels
 
-### Requirement 26: Notification Retry Mechanism
+### Requirement 22: Notification Retry Mechanism
 
 **User Story:** As an Agency staff member, I want failed notifications to be retried automatically, so that delivery issues are handled gracefully.
 
@@ -348,7 +321,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. WHEN a notification is successfully sent after retry, THE System SHALL update status to 'sent' and record sent_at timestamp
 5. WHEN retry_count reaches 3 and notification still fails, THE System SHALL set status to 'failed_permanently'
 
-### Requirement 27: Payment Schedule Auto-Generation
+### Requirement 23: Payment Schedule Auto-Generation
 
 **User Story:** As an Agency staff member, I want payment schedules to be automatically generated for bookings, so that I can track customer payments.
 
@@ -360,7 +333,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL calculate Installment 2 due_date as departure_date minus 30 days
 5. THE System SHALL calculate each installment amount as booking total_amount multiplied by the percentage
 
-### Requirement 28: Payment Recording and Tracking
+### Requirement 24: Payment Recording and Tracking
 
 **User Story:** As an Agency staff member, I want to record customer payments, so that I can track payment status.
 
@@ -372,7 +345,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. WHEN paid_amount is greater than zero but less than amount, THE System SHALL update status to 'partially_paid'
 5. THE System SHALL identify overdue payments where due_date is less than today and status is 'pending'
 
-### Requirement 29: Itinerary Builder
+### Requirement 25: Itinerary Builder
 
 **User Story:** As an Agency staff member, I want to build day-by-day itineraries for packages, so that customers can see detailed trip plans.
 
@@ -384,7 +357,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL allow adding multiple activities per day with time, location, activity description, and meal_type
 5. THE System SHALL support meal_type values: breakfast, lunch, dinner, snack, none
 
-### Requirement 30: Supplier Bill Auto-Generation
+### Requirement 26: Supplier Bill Auto-Generation
 
 **User Story:** As an Agency staff member, I want supplier bills to be automatically generated from approved purchase orders, so that I can track payables.
 
@@ -396,7 +369,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL calculate due_date as bill_date plus 30 days
 5. THE System SHALL set total_amount equal to purchase order total_amount
 
-### Requirement 31: Supplier Payment Recording
+### Requirement 27: Supplier Payment Recording
 
 **User Story:** As an Agency staff member, I want to record payments to suppliers, so that I can track payables status.
 
@@ -408,7 +381,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. WHEN paid_amount is greater than zero but less than total_amount, THE System SHALL update status to 'partially_paid'
 5. THE System SHALL identify overdue bills where due_date is less than today and status is 'unpaid'
 
-### Requirement 32: Communication Log
+### Requirement 28: Communication Log
 
 **User Story:** As an Agency staff member, I want to log customer communications, so that I can track interaction history and follow-ups.
 
@@ -420,7 +393,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. WHEN follow_up_required is true, THE System SHALL require follow_up_date
 5. THE System SHALL allow marking follow-ups as done by setting follow_up_done to true
 
-### Requirement 33: B2B Marketplace - Agency Service Publishing
+### Requirement 29: B2B Marketplace - Agency Service Publishing
 
 **User Story:** As an Agency A staff member, I want to publish excess inventory to the marketplace, so that other agencies can purchase from me.
 
@@ -432,7 +405,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL initialize available_quota equal to total_quota
 5. WHEN is_published is set to true, THE System SHALL record published_at timestamp
 
-### Requirement 34: B2B Marketplace - Service Browsing with Hidden Supplier
+### Requirement 30: B2B Marketplace - Service Browsing with Hidden Supplier
 
 **User Story:** As an Agency B staff member, I want to browse marketplace services without seeing supplier names, so that I can purchase from other agencies.
 
@@ -444,7 +417,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL show available_quota for each service
 5. THE System SHALL prevent agencies from viewing their own published services in the marketplace
 
-### Requirement 35: B2B Marketplace - Agency Order Creation
+### Requirement 31: B2B Marketplace - Agency Order Creation
 
 **User Story:** As an Agency B staff member, I want to create orders to other agencies, so that I can purchase marketplace services.
 
@@ -456,7 +429,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL reserve quota by incrementing agency_service reserved_quota and decrementing available_quota by order quantity
 5. THE System SHALL send notification to Agency A when an order is created
 
-### Requirement 36: B2B Marketplace - Order Approval Workflow
+### Requirement 32: B2B Marketplace - Order Approval Workflow
 
 **User Story:** As an Agency A staff member, I want to approve or reject orders from other agencies, so that I can control my inventory sales.
 
@@ -468,7 +441,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. WHEN an order is rejected, THE System SHALL release quota by decrementing reserved_quota and incrementing available_quota
 5. THE System SHALL send notification to Agency B when an order is approved or rejected
 
-### Requirement 37: B2B Marketplace - Auto-Reject Pending Orders
+### Requirement 33: B2B Marketplace - Auto-Reject Pending Orders
 
 **User Story:** As an Agency B staff member, I want pending orders to be automatically rejected after 24 hours, so that my quota is not locked indefinitely.
 
@@ -480,7 +453,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL release reserved quota back to available_quota
 5. THE System SHALL send notification to the buyer agency when an order is auto-rejected
 
-### Requirement 38: B2B Marketplace - Auto-Unpublish Zero Quota Services
+### Requirement 34: B2B Marketplace - Auto-Unpublish Zero Quota Services
 
 **User Story:** As an Agency A staff member, I want services to be automatically unpublished when quota reaches zero, so that buyers cannot order unavailable services.
 
@@ -492,7 +465,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL allow manual republishing when quota becomes available again
 5. THE System SHALL maintain the invariant: total_quota = used_quota + available_quota + reserved_quota + sold_quota
 
-### Requirement 39: Profitability Tracking - Revenue and Cost Calculation
+### Requirement 35: Profitability Tracking - Revenue and Cost Calculation
 
 **User Story:** As an Agency staff member, I want to track booking profitability, so that I can identify high and low margin bookings.
 
@@ -504,7 +477,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL calculate gross_margin_percentage as (gross_profit / revenue) × 100
 5. THE System SHALL identify low margin bookings where gross_margin_percentage is less than 10%
 
-### Requirement 40: Profitability Dashboard
+### Requirement 36: Profitability Dashboard
 
 **User Story:** As an Agency staff member, I want to view profitability metrics on a dashboard, so that I can make informed pricing decisions.
 
@@ -516,7 +489,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL list bookings with margins below 10% as low margin warnings
 5. THE System SHALL allow filtering profitability data by package type and date range
 
-### Requirement 41: Background Job Scheduling
+### Requirement 37: Background Job Scheduling
 
 **User Story:** As a system administrator, I want background jobs to run automatically on schedule, so that automated tasks are executed reliably.
 
@@ -529,7 +502,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 5. THE System SHALL schedule the auto-reject orders job to run every hour
 6. THE System SHALL schedule the auto-unpublish services job to run daily at 10:00 AM
 
-### Requirement 42: API Authentication and Authorization
+### Requirement 38: API Authentication and Authorization
 
 **User Story:** As a developer, I want all API endpoints to be protected with authentication and authorization, so that only authorized users can access resources.
 
@@ -541,7 +514,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. THE System SHALL return 401 Unauthorized when JWT token is missing or invalid
 5. THE System SHALL return 403 Forbidden when user lacks required permissions
 
-### Requirement 43: API Error Handling and Validation
+### Requirement 39: API Error Handling and Validation
 
 **User Story:** As a developer, I want consistent error handling and validation across all API endpoints, so that clients receive clear error messages.
 
@@ -553,7 +526,7 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 4. WHEN a business rule is violated, THE System SHALL return 422 Unprocessable Entity with error details
 5. WHEN an unexpected error occurs, THE System SHALL return 500 Internal Server Error and log the error
 
-### Requirement 44: Database Migration and Seeding
+### Requirement 40: Database Migration and Seeding
 
 **User Story:** As a developer, I want database migrations and seed data, so that the database schema and initial data are set up correctly.
 
@@ -564,3 +537,334 @@ This document specifies the requirements for Phase 1 MVP of a Multi-Tenant Tour 
 3. THE System SHALL enable Row-Level Security policies on tenant-scoped tables
 4. THE System SHALL seed initial data for document_types with required_for_package_types
 5. THE System SHALL seed initial data for task_templates with trigger stages: after_booking, h_30, h_7
+
+### Requirement 41: Subscription Plan Management
+
+**User Story:** As a Platform_Admin, I want to manage subscription plans with different features and pricing tiers, so that agencies can subscribe to plans that fit their needs.
+
+#### Acceptance Criteria
+
+1. WHEN Platform_Admin creates a subscription plan, THE System SHALL require plan_name, plan_type, monthly_price, and features
+2. THE System SHALL support plan_type values: free, basic, professional, enterprise
+3. THE System SHALL store features as JSONB with configurable limits (max_users, max_bookings_per_month, max_packages, marketplace_access, api_access, custom_branding)
+4. THE System SHALL allow Platform_Admin to activate or deactivate subscription plans
+5. THE System SHALL prevent deletion of subscription plans that have active agency subscriptions
+
+### Requirement 42: Agency Subscription Assignment
+
+**User Story:** As a Platform_Admin, I want to assign subscription plans to agencies, so that agencies have access to features based on their subscription.
+
+#### Acceptance Criteria
+
+1. WHEN Platform_Admin assigns a subscription to an agency, THE System SHALL create an agency_subscription record with agency_id, plan_id, start_date, and billing_cycle
+2. THE System SHALL support billing_cycle values: monthly, quarterly, annually
+3. THE System SHALL calculate next_billing_date based on start_date and billing_cycle
+4. THE System SHALL set status to 'active' by default
+5. THE System SHALL support status values: active, suspended, cancelled, expired
+6. THE System SHALL allow only one active subscription per agency at a time
+7. WHEN a subscription is cancelled, THE System SHALL record cancelled_at timestamp and cancellation_reason
+
+### Requirement 43: Commission Configuration
+
+**User Story:** As a Platform_Admin, I want to configure commission rates for different service types and agencies, so that the platform can earn revenue from transactions.
+
+#### Acceptance Criteria
+
+1. WHEN Platform_Admin creates a commission config, THE System SHALL require service_type, commission_type, and commission_value
+2. THE System SHALL support service_type values: hotel, flight, visa, transport, guide, insurance, catering, handling, package, marketplace
+3. THE System SHALL support commission_type values: percentage, fixed
+4. WHEN commission_type is 'percentage', THE System SHALL validate that commission_value is between 0 and 100
+5. WHEN commission_type is 'fixed', THE System SHALL validate that commission_value is greater than zero
+6. THE System SHALL allow agency-specific commission configs by setting agency_id (NULL for global configs)
+7. THE System SHALL prioritize agency-specific configs over global configs when calculating commissions
+8. THE System SHALL allow Platform_Admin to set effective_from and effective_until dates for commission configs
+
+### Requirement 44: Commission Transaction Recording
+
+**User Story:** As a Platform_Admin, I want to automatically record commission transactions for bookings and marketplace orders, so that platform revenue is tracked accurately.
+
+#### Acceptance Criteria
+
+1. WHEN a booking is confirmed, THE System SHALL calculate commission based on applicable commission config
+2. WHEN an agency order is approved in marketplace, THE System SHALL calculate commission based on marketplace commission config
+3. THE System SHALL create a commission_transaction record with transaction_type, reference_id, agency_id, base_amount, commission_rate, commission_amount, and status
+4. THE System SHALL support transaction_type values: booking, marketplace_order, purchase_order
+5. THE System SHALL set status to 'pending' by default
+6. THE System SHALL support status values: pending, collected, waived, refunded
+7. WHEN commission is collected, THE System SHALL record collected_at timestamp and payment_reference
+8. THE System SHALL calculate total commission per agency for reporting purposes
+
+### Requirement 45: Supplier Self-Registration
+
+**User Story:** As a Supplier, I want to register on the platform via a public registration form, so that I can offer services to agencies without Platform_Admin manual creation.
+
+#### Acceptance Criteria
+
+1. THE System SHALL provide a public endpoint POST /api/auth/register/supplier for supplier self-registration
+2. WHEN a Supplier submits registration, THE System SHALL require company_name, business_type, email, phone, password, business_license_number, tax_id, address, city, province, postal_code, and country
+3. THE System SHALL validate that email is unique across all suppliers
+4. THE System SHALL validate that business_license_number is unique across all suppliers
+5. THE System SHALL validate that tax_id is unique across all suppliers
+6. THE System SHALL hash the password using BCrypt with salt rounds of 12
+7. THE System SHALL validate password requirements (minimum 8 characters, at least 1 uppercase, 1 lowercase, 1 number)
+8. THE System SHALL create a supplier record with status 'pending' and generate a unique supplier_code
+9. THE System SHALL create a user account with user_type 'supplier_staff' linked to the supplier
+10. THE System SHALL send email notification to supplier confirming registration submission
+11. THE System SHALL send email notification to Platform_Admin for approval review
+12. THE System SHALL NOT require authentication for the supplier registration endpoint
+
+### Requirement 46: Standardized API Response Format
+
+**User Story:** As a frontend developer, I want all API responses to follow a consistent format with snake_case naming convention, so that response handling is predictable and follows REST API best practices.
+
+#### Acceptance Criteria
+
+1. THE System SHALL return all successful responses with the structure: { "success": true, "data": {...}, "message": string, "timestamp": ISO8601 }
+2. THE System SHALL return all error responses with the structure: { "success": false, "error": { "code": string, "message": string, "details": array }, "timestamp": ISO8601 }
+3. THE System SHALL return paginated responses with the structure: { "success": true, "data": [...], "pagination": { "page": number, "page_size": number, "total_items": number, "total_pages": number }, "timestamp": ISO8601 }
+4. THE System SHALL use snake_case naming convention for all JSON property names in API responses
+5. THE System SHALL use snake_case naming convention for all JSON property names in API request bodies
+6. THE System SHALL configure JSON serialization to automatically convert C# PascalCase properties to snake_case JSON properties
+7. THE System SHALL include a timestamp in ISO 8601 format (UTC) in all API responses
+8. WHEN validation fails, THE System SHALL return error code "VALIDATION_ERROR" with details array containing field-specific errors
+9. WHEN a resource is not found, THE System SHALL return error code "NOT_FOUND" with appropriate message
+10. WHEN authentication fails, THE System SHALL return error code "UNAUTHORIZED" with appropriate message
+11. WHEN authorization fails, THE System SHALL return error code "FORBIDDEN" with appropriate message
+12. WHEN a business rule is violated, THE System SHALL return error code "BUSINESS_RULE_VIOLATION" with appropriate message
+13. WHEN an unexpected error occurs, THE System SHALL return error code "INTERNAL_SERVER_ERROR" with generic message (without exposing internal details)
+
+
+---
+
+## Self-Registration with KYC Verification Requirements
+
+### Requirement 47: Agency Self-Registration
+
+**User Story:** As an Agency owner, I want to register on the platform via a public registration form, so that I can use the platform for my travel agency operations.
+
+#### Acceptance Criteria
+
+1. THE System SHALL provide a public endpoint POST /api/auth/register/agency for agency self-registration
+2. WHEN an Agency submits registration, THE System SHALL require company_name, owner_name, email, phone, business_type, password, and confirm_password
+3. THE System SHALL validate that email is unique across all agencies
+4. THE System SHALL validate that password matches confirm_password
+5. THE System SHALL hash the password using BCrypt with salt rounds of 12
+6. THE System SHALL validate password requirements (minimum 8 characters, at least 1 uppercase, 1 lowercase, 1 number)
+7. THE System SHALL create an agency record with verification_status 'pending_documents' and is_active false
+8. THE System SHALL generate a unique agency_code in format AGN-YYMMDD-XXX
+9. THE System SHALL create a user account with user_type 'agency_staff' linked to the agency
+10. THE System SHALL send email notification to agency confirming registration submission
+11. THE System SHALL send email notification to Platform_Admin for review
+12. THE System SHALL NOT require authentication for the agency registration endpoint
+13. WHEN registration is successful, THE System SHALL return agency_id and redirect URL to document upload page
+
+### Requirement 48: Enhanced Supplier Self-Registration with Service Types
+
+**User Story:** As a Supplier, I want to specify which service types I will provide during registration, so that the system can generate appropriate document requirements.
+
+#### Acceptance Criteria
+
+1. THE System SHALL extend existing Supplier registration (Requirement 45) to include service_types field
+2. WHEN a Supplier submits registration, THE System SHALL require at least one service_type from: hotel, flight, visa, transport, guide, insurance, catering, handling
+3. THE System SHALL allow Supplier to select multiple service_types during registration
+4. THE System SHALL store service_types as an array in suppliers table
+5. THE System SHALL validate that all selected service_types are valid enum values
+6. THE System SHALL use service_types to determine which document requirements to generate
+7. THE System SHALL update verification_status to 'pending_documents' (new field)
+8. THE System SHALL set verification_attempts to 0 and max_verification_attempts to 3
+
+### Requirement 49: MinIO File Storage Integration
+
+**User Story:** As a developer, I want to integrate MinIO for document storage, so that KYC documents are stored securely and scalably.
+
+#### Acceptance Criteria
+
+1. THE System SHALL use MinIO SDK for .NET to interact with MinIO object storage
+2. THE System SHALL read MinIO configuration from appsettings.json including: Endpoint, AccessKey, SecretKey, BucketName, UseSSL, Region
+3. THE System SHALL create bucket 'tour-travel-documents' if it does not exist on application startup
+4. THE System SHALL organize files in folder structure: {entity_type}/{entity_id}/{document_type}_{timestamp}.{extension}
+5. THE System SHALL support file upload with maximum size of 10MB (configurable)
+6. THE System SHALL validate file extensions: .pdf, .jpg, .jpeg, .png, .doc, .docx
+7. THE System SHALL generate unique filenames using GUID to prevent collisions
+8. THE System SHALL return presigned URLs valid for 7 days for file download
+9. THE System SHALL implement IFileStorageService interface with methods: UploadAsync, DownloadAsync, DeleteAsync, ExistsAsync, GetFileUrl
+10. THE System SHALL handle MinIO connection errors gracefully and return appropriate error messages
+11. THE System SHALL log all file operations (upload, download, delete) for audit purposes
+
+### Requirement 50: Document Requirements Configuration
+
+**User Story:** As a Platform_Admin, I want to configure which documents are required for each entity type and service type, so that the system can auto-generate document checklists.
+
+#### Acceptance Criteria
+
+1. THE System SHALL provide a document_requirements table to store document configuration
+2. THE System SHALL support entity_type values: 'agency', 'supplier'
+3. THE System SHALL support service_type values: null (for general docs), 'hotel', 'flight', 'visa', 'transport', 'guide', 'insurance', 'catering', 'handling'
+4. THE System SHALL support document_category values: 'identity', 'business_legal', 'operational', 'service_specific'
+5. THE System SHALL allow Platform_Admin to mark documents as mandatory or optional
+6. THE System SHALL provide seeder data for standard Indonesian business documents:
+   - General: KTP, NPWP, NIB, Akta Pendirian, SK Kemenkumham, SKDU, Bank Statement
+   - Hotel: Hotel License, TDUP, Hotel Rating Certificate
+   - Flight: IATA/TIDS, Flight License, BSP Certificate
+   - Visa: Visa Processing License, Embassy Partnership Letter
+   - Transport: Transport License, STNK, KIR, Vehicle Insurance
+   - Guide: Tour Guide License, HPI Membership, Language Certificate
+   - Insurance: Insurance License (OJK), AAJI Certificate, Insurance Partnership
+   - Catering: PIRT/BPOM, Halal Certificate, Hygiene Certificate, Catering License
+   - Handling: Ground Handling License, Airport Partnership, Handling Certificate
+7. THE System SHALL allow Platform_Admin to activate/deactivate document requirements
+8. THE System SHALL provide API endpoint GET /api/admin/document-requirements to list all requirements
+9. THE System SHALL provide API endpoint POST /api/admin/document-requirements to create new requirement
+10. THE System SHALL provide API endpoint PUT /api/admin/document-requirements/{id} to update requirement
+
+### Requirement 51: Entity Document Management
+
+**User Story:** As an Agency or Supplier, I want to upload required documents for KYC verification, so that I can get approved to use the platform.
+
+#### Acceptance Criteria
+
+1. THE System SHALL provide entity_documents table to store document metadata
+2. WHEN an Agency or Supplier completes registration, THE System SHALL auto-generate document checklist based on document_requirements
+3. THE System SHALL create entity_documents records with verification_status 'pending' for all mandatory documents
+4. THE System SHALL support document upload via POST /api/documents/upload endpoint
+5. WHEN a document is uploaded, THE System SHALL validate entity ownership (user must own the entity)
+6. THE System SHALL validate file size does not exceed MaxFileSizeMB configuration
+7. THE System SHALL validate file extension is in AllowedExtensions configuration
+8. THE System SHALL upload file to MinIO using IFileStorageService
+9. THE System SHALL save document metadata to entity_documents table including: file_url, file_name, file_size, mime_type, uploaded_at
+10. THE System SHALL allow re-upload of rejected documents (replaces existing file)
+11. THE System SHALL provide GET /api/documents endpoint to list documents for current user's entity
+12. THE System SHALL provide GET /api/documents/{id}/download endpoint to download document
+13. THE System SHALL provide DELETE /api/documents/{id} endpoint to delete document (only if verification_status is 'pending' or 'rejected')
+14. THE System SHALL track document completion percentage: (verified_count / mandatory_count) * 100
+
+### Requirement 52: Document Verification Workflow
+
+**User Story:** As a Platform_Admin, I want to verify uploaded documents and approve or reject entities, so that only legitimate businesses can use the platform.
+
+#### Acceptance Criteria
+
+1. THE System SHALL provide GET /api/admin/verification-queue endpoint to list entities awaiting verification
+2. THE System SHALL support filtering by entity_type, verification_status, and date_range
+3. THE System SHALL provide GET /api/admin/verification/{entity_type}/{entity_id} endpoint to view entity details and documents
+4. THE System SHALL allow Platform_Admin to verify individual documents via PUT /api/admin/documents/{id}/verify
+5. THE System SHALL allow Platform_Admin to reject individual documents via PUT /api/admin/documents/{id}/reject with rejection_reason
+6. WHEN a document is verified, THE System SHALL update verification_status to 'verified', set verified_at timestamp, and record verified_by user_id
+7. WHEN a document is rejected, THE System SHALL update verification_status to 'rejected' and save rejection_reason
+8. THE System SHALL allow Platform_Admin to approve entire entity via POST /api/admin/verification/{entity_type}/{entity_id}/approve
+9. WHEN an entity is approved, THE System SHALL:
+   - Verify all mandatory documents are in 'verified' status
+   - Update entity verification_status to 'verified'
+   - Set verified_at timestamp and verified_by user_id
+   - For agencies: set is_active to true
+   - For suppliers: set status to 'active'
+   - Send email notification to entity
+10. THE System SHALL allow Platform_Admin to reject entire entity via POST /api/admin/verification/{entity_type}/{entity_id}/reject with rejection_reason
+11. WHEN an entity is rejected, THE System SHALL:
+    - Update entity verification_status to 'rejected'
+    - Increment verification_attempts by 1
+    - Save rejection_reason
+    - Send email notification to entity with rejection details
+12. THE System SHALL prevent entity approval if any mandatory document is not verified
+13. THE System SHALL prevent entity approval if verification_attempts >= max_verification_attempts
+
+### Requirement 53: Re-submission After Rejection
+
+**User Story:** As an Agency or Supplier, I want to re-submit documents after rejection, so that I can correct issues and get approved.
+
+#### Acceptance Criteria
+
+1. WHEN an entity is rejected, THE System SHALL allow the entity to re-upload rejected documents
+2. THE System SHALL display rejection_reason for each rejected document
+3. WHEN a rejected document is re-uploaded, THE System SHALL:
+   - Delete old file from MinIO
+   - Upload new file to MinIO
+   - Update entity_documents with new file metadata
+   - Reset verification_status to 'pending'
+   - Update uploaded_at timestamp
+4. WHEN all mandatory documents are re-uploaded, THE System SHALL automatically update entity verification_status to 'awaiting_approval'
+5. THE System SHALL send notification to Platform_Admin when entity is ready for re-verification
+6. THE System SHALL enforce max_verification_attempts limit (default: 3)
+7. WHEN verification_attempts >= max_verification_attempts, THE System SHALL:
+   - Block further re-submissions
+   - Display message: "Maximum verification attempts reached. Please contact support."
+   - Prevent document upload
+8. THE System SHALL allow Platform_Admin to reset verification_attempts if needed
+
+### Requirement 54: Verification Status Management
+
+**User Story:** As a user, I want to see my verification status and progress, so that I know what actions are required.
+
+#### Acceptance Criteria
+
+1. THE System SHALL support verification_status values for agencies and suppliers:
+   - 'pending_documents': Registration complete, documents not uploaded
+   - 'awaiting_approval': All mandatory documents uploaded, waiting for admin review
+   - 'verified': Approved by admin, can use platform
+   - 'rejected': Rejected by admin, can re-submit
+2. THE System SHALL provide GET /api/auth/me endpoint that includes verification_status and verification_attempts
+3. THE System SHALL provide GET /api/documents/progress endpoint that returns:
+   - total_mandatory_documents
+   - uploaded_documents
+   - verified_documents
+   - rejected_documents
+   - completion_percentage
+   - verification_status
+   - verification_attempts
+   - max_verification_attempts
+   - can_resubmit (boolean)
+4. WHEN an agency/supplier logs in with verification_status 'pending_documents', THE System SHALL redirect to document upload page
+5. WHEN an agency/supplier logs in with verification_status 'awaiting_approval', THE System SHALL display "Verification in progress" message
+6. WHEN an agency/supplier logs in with verification_status 'rejected', THE System SHALL display rejection_reason and allow re-submission
+7. WHEN an agency/supplier logs in with verification_status 'verified', THE System SHALL allow full access to platform features
+
+### Requirement 55: Access Control During Verification
+
+**User Story:** As a Platform_Admin, I want to ensure that unverified entities have limited access, so that only verified businesses can perform critical operations.
+
+#### Acceptance Criteria
+
+1. THE System SHALL allow agencies/suppliers with verification_status 'pending_documents' or 'awaiting_approval' to access only:
+   - Profile/Settings page
+   - Document upload page
+   - Logout functionality
+2. THE System SHALL block access to all other features until verification_status is 'verified'
+3. THE System SHALL return HTTP 403 Forbidden with error code "VERIFICATION_REQUIRED" when unverified entity attempts to access restricted endpoints
+4. THE System SHALL provide middleware to check verification_status on protected endpoints
+5. THE System SHALL allow Platform_Admin to access all features regardless of verification status
+6. THE System SHALL include verification_status in JWT token claims for efficient authorization checks
+
+### Requirement 56: Email Notifications for Verification Workflow
+
+**User Story:** As an Agency or Supplier, I want to receive email notifications about my verification status, so that I stay informed about the process.
+
+#### Acceptance Criteria
+
+1. THE System SHALL send email notification when agency/supplier registration is successful with subject "Registration Successful - Upload Documents"
+2. THE System SHALL send email notification when all documents are uploaded with subject "Documents Submitted - Verification in Progress"
+3. THE System SHALL send email notification when entity is approved with subject "Verification Approved - Welcome to Platform"
+4. THE System SHALL send email notification when entity is rejected with subject "Verification Rejected - Action Required" including rejection_reason
+5. THE System SHALL send email notification to Platform_Admin when new entity registers with subject "New Registration - Review Required"
+6. THE System SHALL send email notification to Platform_Admin when entity submits documents with subject "Documents Submitted - Verification Required"
+7. THE System SHALL use email templates with proper formatting and branding
+8. THE System SHALL include relevant links in emails (e.g., link to document upload page, link to admin verification page)
+9. THE System SHALL log all email sending attempts for audit purposes
+10. THE System SHALL handle email sending failures gracefully without blocking the main workflow
+
+### Requirement 57: Audit Logging for Verification Actions
+
+**User Story:** As a Platform_Admin, I want to track all verification-related actions, so that I can audit the verification process.
+
+#### Acceptance Criteria
+
+1. THE System SHALL log all document uploads with: entity_type, entity_id, document_type, file_name, uploaded_by, uploaded_at
+2. THE System SHALL log all document verifications with: document_id, verified_by, verified_at
+3. THE System SHALL log all document rejections with: document_id, rejected_by, rejected_at, rejection_reason
+4. THE System SHALL log all entity approvals with: entity_type, entity_id, approved_by, approved_at
+5. THE System SHALL log all entity rejections with: entity_type, entity_id, rejected_by, rejected_at, rejection_reason
+6. THE System SHALL log all document deletions with: document_id, deleted_by, deleted_at
+7. THE System SHALL provide GET /api/admin/audit-logs endpoint to view verification audit logs
+8. THE System SHALL support filtering audit logs by entity_type, entity_id, action_type, date_range
+9. THE System SHALL retain audit logs for at least 1 year
+10. THE System SHALL include audit log entries in database backups
+

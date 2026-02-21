@@ -294,6 +294,34 @@ The system implements Row-Level Security (RLS) in PostgreSQL for complete data i
 - Methods: Approve(), Reject(), Cancel()
 - Relationships: BelongsTo Agency (Buyer), BelongsTo Agency (Seller), BelongsTo AgencyService
 
+#### Subscription and Commission Entities
+
+**SubscriptionPlan**
+- Properties: Id, PlanName, PlanType, Description, MonthlyPrice, AnnualPrice, Features, IsActive, DisplayOrder
+- Methods: Activate(), Deactivate(), UpdateFeatures()
+- Relationships: HasMany AgencySubscriptions
+
+**AgencySubscription**
+- Properties: Id, AgencyId, PlanId, StartDate, EndDate, BillingCycle, NextBillingDate, Status, AutoRenew, CancelledAt, CancellationReason
+- Methods: Cancel(), Renew(), Suspend(), Reactivate()
+- Relationships: BelongsTo Agency, BelongsTo SubscriptionPlan
+
+**CommissionConfig**
+- Properties: Id, AgencyId, ServiceType, CommissionType, CommissionValue, EffectiveFrom, EffectiveUntil, IsActive, Notes
+- Methods: Activate(), Deactivate(), ValidateDateRange(), CalculateCommission()
+- Relationships: BelongsTo Agency (nullable for global configs), HasMany CommissionTransactions
+
+**CommissionTransaction**
+- Properties: Id, TransactionType, ReferenceId, AgencyId, CommissionConfigId, BaseAmount, CommissionRate, CommissionAmount, Status, CollectedAt, PaymentReference, Notes
+- Methods: MarkAsCollected(), Waive(), Refund()
+- Relationships: BelongsTo Agency, BelongsTo CommissionConfig
+
+**RevenueMetric**
+- Properties: Id, AgencyId, MetricDate, TotalBookings, TotalRevenue, TotalCommission, MarketplaceOrders, MarketplaceRevenue, ActivePackages, ActiveJourneys
+- Methods: UpdateMetrics(), CalculateTotals()
+- Relationships: BelongsTo Agency
+
+
 ### Application Layer Interfaces
 
 #### Command Handlers
@@ -381,16 +409,15 @@ The system implements Row-Level Security (RLS) in PostgreSQL for complete data i
 - CreateSubscriptionPlanCommand → CreateSubscriptionPlanCommandHandler
 - UpdateSubscriptionPlanCommand → UpdateSubscriptionPlanCommandHandler
 - ActivateSubscriptionPlanCommand → ActivateSubscriptionPlanCommandHandler
-- AssignSubscriptionCommand → AssignSubscriptionCommandHandler
-- RenewSubscriptionCommand → RenewSubscriptionCommandHandler
-- CancelSubscriptionCommand → CancelSubscriptionCommandHandler
+- AssignAgencySubscriptionCommand → AssignAgencySubscriptionCommandHandler
+- CancelAgencySubscriptionCommand → CancelAgencySubscriptionCommandHandler
 
 **Commission Commands**
 - CreateCommissionConfigCommand → CreateCommissionConfigCommandHandler
 - UpdateCommissionConfigCommand → UpdateCommissionConfigCommandHandler
-- RecordCommissionCommand → RecordCommissionCommandHandler
+- RecordCommissionTransactionCommand → RecordCommissionTransactionCommandHandler
 - CollectCommissionCommand → CollectCommissionCommandHandler
-- WaiveCommissionCommand → WaiveCommissionCommandHandler
+
 
 #### Query Handlers
 
@@ -469,15 +496,16 @@ The system implements Row-Level Security (RLS) in PostgreSQL for complete data i
 **Subscription Queries**
 - GetSubscriptionPlansQuery → GetSubscriptionPlansQueryHandler
 - GetSubscriptionPlanByIdQuery → GetSubscriptionPlanByIdQueryHandler
-- GetAgencySubscriptionQuery → GetAgencySubscriptionQueryHandler
-- GetSubscriptionHistoryQuery → GetSubscriptionHistoryQueryHandler
+- GetAgencySubscriptionsQuery → GetAgencySubscriptionsQueryHandler
+- GetAgencySubscriptionByIdQuery → GetAgencySubscriptionByIdQueryHandler
 
 **Commission Queries**
 - GetCommissionConfigsQuery → GetCommissionConfigsQueryHandler
+- GetCommissionConfigByIdQuery → GetCommissionConfigByIdQueryHandler
 - GetCommissionTransactionsQuery → GetCommissionTransactionsQueryHandler
-- GetCommissionSummaryQuery → GetCommissionSummaryQueryHandler
+- GetCommissionTransactionByIdQuery → GetCommissionTransactionByIdQueryHandler
 - GetRevenueMetricsQuery → GetRevenueMetricsQueryHandler
-- GetRevenueDashboardQuery → GetRevenueDashboardQueryHandler
+
 
 ### Infrastructure Services
 
@@ -551,6 +579,12 @@ The system uses PostgreSQL 16 with 29+ tables organized into logical groups:
 - phone: VARCHAR(50)
 - address: TEXT
 - business_type: VARCHAR(100)
+- business_license_number: VARCHAR(100) UNIQUE NOT NULL
+- tax_id: VARCHAR(100) UNIQUE NOT NULL
+- city: VARCHAR(100)
+- province: VARCHAR(100)
+- postal_code: VARCHAR(20)
+- country: VARCHAR(100) DEFAULT 'Indonesia'
 - status: VARCHAR(50) DEFAULT 'pending' (pending, active, rejected, suspended)
 - approved_at: TIMESTAMP
 - approved_by: UUID (FK → users)
@@ -1043,6 +1077,81 @@ The system uses PostgreSQL 16 with 29+ tables organized into logical groups:
   - Buyer: buyer_agency_id = current_setting('app.current_agency_id')::UUID
   - Seller: seller_agency_id = current_setting('app.current_agency_id')::UUID
 
+### Subscription and Commission Tables
+
+**subscription_plans**
+- id: UUID (PK)
+- plan_name: VARCHAR(100) UNIQUE NOT NULL
+- plan_type: VARCHAR(50) NOT NULL (free, basic, professional, enterprise)
+- description: TEXT
+- monthly_price: DECIMAL(10,2) NOT NULL
+- annual_price: DECIMAL(10,2)
+- features: JSONB NOT NULL (max_users, max_bookings_per_month, max_packages, marketplace_access, api_access, custom_branding, priority_support)
+- is_active: BOOLEAN DEFAULT true
+- display_order: INTEGER DEFAULT 0
+- created_at, updated_at: TIMESTAMP
+
+**agency_subscriptions**
+- id: UUID (PK)
+- agency_id: UUID (FK → agencies) NOT NULL
+- plan_id: UUID (FK → subscription_plans) NOT NULL
+- start_date: DATE NOT NULL
+- end_date: DATE
+- billing_cycle: VARCHAR(50) NOT NULL (monthly, quarterly, annually)
+- next_billing_date: DATE
+- status: VARCHAR(50) DEFAULT 'active' (active, suspended, cancelled, expired)
+- auto_renew: BOOLEAN DEFAULT true
+- cancelled_at: TIMESTAMP
+- cancellation_reason: TEXT
+- created_at, updated_at: TIMESTAMP
+- UNIQUE: (agency_id, status) WHERE status = 'active' (only one active subscription per agency)
+
+**commission_configs**
+- id: UUID (PK)
+- agency_id: UUID (FK → agencies) (NULL for global configs)
+- service_type: VARCHAR(50) NOT NULL (hotel, flight, visa, transport, guide, insurance, catering, handling, package, marketplace)
+- commission_type: VARCHAR(50) NOT NULL (percentage, fixed)
+- commission_value: DECIMAL(10,2) NOT NULL
+- effective_from: DATE NOT NULL
+- effective_until: DATE
+- is_active: BOOLEAN DEFAULT true
+- notes: TEXT
+- created_by: UUID (FK → users) NOT NULL
+- created_at, updated_at: TIMESTAMP
+- CONSTRAINT: (commission_type = 'percentage' AND commission_value BETWEEN 0 AND 100) OR (commission_type = 'fixed' AND commission_value > 0)
+
+**commission_transactions**
+- id: UUID (PK)
+- transaction_type: VARCHAR(50) NOT NULL (booking, marketplace_order, purchase_order)
+- reference_id: UUID NOT NULL (booking_id, agency_order_id, or po_id)
+- agency_id: UUID (FK → agencies) NOT NULL
+- commission_config_id: UUID (FK → commission_configs)
+- base_amount: DECIMAL(15,2) NOT NULL
+- commission_rate: DECIMAL(10,2) NOT NULL
+- commission_amount: DECIMAL(15,2) NOT NULL
+- status: VARCHAR(50) DEFAULT 'pending' (pending, collected, waived, refunded)
+- collected_at: TIMESTAMP
+- payment_reference: VARCHAR(100)
+- notes: TEXT
+- created_at, updated_at: TIMESTAMP
+- INDEX: (agency_id, transaction_type, status)
+- INDEX: (reference_id, transaction_type)
+
+**revenue_metrics**
+- id: UUID (PK)
+- agency_id: UUID (FK → agencies) NOT NULL
+- metric_date: DATE NOT NULL
+- total_bookings: INTEGER DEFAULT 0
+- total_revenue: DECIMAL(15,2) DEFAULT 0
+- total_commission: DECIMAL(15,2) DEFAULT 0
+- marketplace_orders: INTEGER DEFAULT 0
+- marketplace_revenue: DECIMAL(15,2) DEFAULT 0
+- active_packages: INTEGER DEFAULT 0
+- active_journeys: INTEGER DEFAULT 0
+- created_at, updated_at: TIMESTAMP
+- UNIQUE: (agency_id, metric_date)
+
+
 ### Database Functions
 
 **get_service_price_for_date(service_id UUID, date DATE) RETURNS DECIMAL(15,2)**
@@ -1055,7 +1164,7 @@ The system uses PostgreSQL 16 with 29+ tables organized into logical groups:
 All foreign keys are indexed. Additional indexes:
 - users: email, agency_id, supplier_id
 - agencies: agency_code, is_active
-- suppliers: supplier_code, status
+- suppliers: supplier_code, status, business_license_number, tax_id, email
 - supplier_services: supplier_id, service_type, status, airline, hotel_name, visa_type
 - purchase_orders: agency_id, supplier_id, status
 - packages: agency_id, package_type
@@ -1069,11 +1178,1244 @@ All foreign keys are indexed. Additional indexes:
 - supplier_bills: agency_id, supplier_id, po_id, status
 - agency_services: agency_id, po_id, service_type, is_published
 - agency_orders: buyer_agency_id, seller_agency_id, agency_service_id, status, order_number
-- subscription_plans: plan_code, is_active
+- subscription_plans: plan_type, is_active
 - agency_subscriptions: agency_id, plan_id, status, next_billing_date
-- commission_configs: transaction_type, is_active, effective_from, effective_to
-- commission_transactions: agency_id, transaction_type, status, transaction_date
-- revenue_metrics: metric_date
+- commission_configs: agency_id, service_type, is_active, effective_from, effective_until
+- commission_transactions: agency_id, transaction_type, status, reference_id
+- revenue_metrics: agency_id, metric_date
+
+
+## API Endpoints
+
+This section defines all REST API endpoints organized by functional area.
+
+### Authentication Endpoints
+
+**POST /api/auth/login**
+- Description: User login with email and password
+- Request: { email, password }
+- Response: { token, user, agency/supplier }
+- Auth: Public
+
+**POST /api/auth/register/supplier**
+- Description: Public supplier self-registration
+- Request: { company_name, business_type, email, phone, password, business_license_number, tax_id, address, city, province, postal_code, country }
+- Response: { supplier_id, supplier_code, status: 'pending' }
+- Auth: Public
+
+**POST /api/auth/refresh**
+- Description: Refresh JWT token
+- Request: { refresh_token }
+- Response: { token }
+- Auth: Authenticated
+
+### Platform Admin - Agency Management
+
+**GET /api/admin/agencies**
+- Description: List all agencies with pagination and filters
+- Query: page, page_size, is_active, search
+- Response: { agencies[], total, page, page_size }
+- Auth: Platform Admin
+
+**GET /api/admin/agencies/{id}**
+- Description: Get agency details by ID
+- Response: { agency }
+- Auth: Platform Admin
+
+**POST /api/admin/agencies**
+- Description: Create new agency
+- Request: { company_name, email, phone, address, city, province, postal_code }
+- Response: { agency_id, agency_code }
+- Auth: Platform Admin
+
+**PUT /api/admin/agencies/{id}**
+- Description: Update agency details
+- Request: { company_name, email, phone, address, city, province, postal_code }
+- Response: { agency }
+- Auth: Platform Admin
+
+**PATCH /api/admin/agencies/{id}/activate**
+- Description: Activate agency
+- Response: { agency }
+- Auth: Platform Admin
+
+**PATCH /api/admin/agencies/{id}/deactivate**
+- Description: Deactivate agency
+- Response: { agency }
+- Auth: Platform Admin
+
+### Platform Admin - Supplier Management
+
+**GET /api/admin/suppliers**
+- Description: List all suppliers with pagination and filters
+- Query: page, page_size, status, search
+- Response: { suppliers[], total, page, page_size }
+- Auth: Platform Admin
+
+**GET /api/admin/suppliers/{id}**
+- Description: Get supplier details by ID
+- Response: { supplier }
+- Auth: Platform Admin
+
+**PATCH /api/admin/suppliers/{id}/approve**
+- Description: Approve pending supplier
+- Response: { supplier }
+- Auth: Platform Admin
+
+**PATCH /api/admin/suppliers/{id}/reject**
+- Description: Reject pending supplier
+- Request: { rejection_reason }
+- Response: { supplier }
+- Auth: Platform Admin
+
+### Platform Admin - Subscription Plans
+
+**GET /api/admin/subscription-plans**
+- Description: List all subscription plans
+- Query: is_active
+- Response: { plans[] }
+- Auth: Platform Admin
+
+**GET /api/admin/subscription-plans/{id}**
+- Description: Get subscription plan details
+- Response: { plan }
+- Auth: Platform Admin
+
+**POST /api/admin/subscription-plans**
+- Description: Create new subscription plan
+- Request: { plan_name, plan_type, description, monthly_price, annual_price, features }
+- Response: { plan_id }
+- Auth: Platform Admin
+
+**PUT /api/admin/subscription-plans/{id}**
+- Description: Update subscription plan
+- Request: { plan_name, description, monthly_price, annual_price, features }
+- Response: { plan }
+- Auth: Platform Admin
+
+**PATCH /api/admin/subscription-plans/{id}/activate**
+- Description: Activate subscription plan
+- Response: { plan }
+- Auth: Platform Admin
+
+**PATCH /api/admin/subscription-plans/{id}/deactivate**
+- Description: Deactivate subscription plan
+- Response: { plan }
+- Auth: Platform Admin
+
+### Platform Admin - Agency Subscriptions
+
+**GET /api/admin/agency-subscriptions**
+- Description: List all agency subscriptions
+- Query: agency_id, status, page, page_size
+- Response: { subscriptions[], total }
+- Auth: Platform Admin
+
+**POST /api/admin/agency-subscriptions**
+- Description: Assign subscription to agency
+- Request: { agency_id, plan_id, start_date, billing_cycle }
+- Response: { subscription_id }
+- Auth: Platform Admin
+
+**PATCH /api/admin/agency-subscriptions/{id}/cancel**
+- Description: Cancel agency subscription
+- Request: { cancellation_reason }
+- Response: { subscription }
+- Auth: Platform Admin
+
+**PATCH /api/admin/agency-subscriptions/{id}/suspend**
+- Description: Suspend agency subscription
+- Response: { subscription }
+- Auth: Platform Admin
+
+### Platform Admin - Commission Configuration
+
+**GET /api/admin/commission-configs**
+- Description: List all commission configurations
+- Query: agency_id, service_type, is_active
+- Response: { configs[] }
+- Auth: Platform Admin
+
+**GET /api/admin/commission-configs/{id}**
+- Description: Get commission config details
+- Response: { config }
+- Auth: Platform Admin
+
+**POST /api/admin/commission-configs**
+- Description: Create commission configuration
+- Request: { agency_id, service_type, commission_type, commission_value, effective_from, effective_until }
+- Response: { config_id }
+- Auth: Platform Admin
+
+**PUT /api/admin/commission-configs/{id}**
+- Description: Update commission configuration
+- Request: { commission_type, commission_value, effective_from, effective_until }
+- Response: { config }
+- Auth: Platform Admin
+
+**PATCH /api/admin/commission-configs/{id}/activate**
+- Description: Activate commission config
+- Response: { config }
+- Auth: Platform Admin
+
+**PATCH /api/admin/commission-configs/{id}/deactivate**
+- Description: Deactivate commission config
+- Response: { config }
+- Auth: Platform Admin
+
+### Platform Admin - Commission Transactions
+
+**GET /api/admin/commission-transactions**
+- Description: List all commission transactions
+- Query: agency_id, transaction_type, status, date_from, date_to, page, page_size
+- Response: { transactions[], total, total_commission }
+- Auth: Platform Admin
+
+**GET /api/admin/commission-transactions/{id}**
+- Description: Get commission transaction details
+- Response: { transaction }
+- Auth: Platform Admin
+
+**PATCH /api/admin/commission-transactions/{id}/collect**
+- Description: Mark commission as collected
+- Request: { payment_reference }
+- Response: { transaction }
+- Auth: Platform Admin
+
+**PATCH /api/admin/commission-transactions/{id}/waive**
+- Description: Waive commission
+- Request: { notes }
+- Response: { transaction }
+- Auth: Platform Admin
+
+### Platform Admin - Revenue Metrics
+
+**GET /api/admin/revenue-metrics**
+- Description: Get revenue metrics dashboard
+- Query: date_from, date_to, agency_id
+- Response: { metrics[], total_revenue, total_commission, total_bookings }
+- Auth: Platform Admin
+
+**GET /api/admin/revenue-metrics/summary**
+- Description: Get revenue summary by date range
+- Query: date_from, date_to
+- Response: { daily_metrics[], monthly_summary, top_agencies[] }
+- Auth: Platform Admin
+
+**GET /api/admin/revenue-metrics/agencies/{agency_id}**
+- Description: Get revenue metrics for specific agency
+- Query: date_from, date_to
+- Response: { metrics[], trends }
+- Auth: Platform Admin
+
+### Supplier Services
+
+**GET /api/supplier/services**
+- Description: List supplier's own services
+- Query: service_type, status, page, page_size
+- Response: { services[], total }
+- Auth: Supplier Staff
+
+**GET /api/supplier/services/{id}**
+- Description: Get service details
+- Response: { service }
+- Auth: Supplier Staff
+
+**POST /api/supplier/services**
+- Description: Create new service
+- Request: { service_type, name, description, base_price, currency, location_city, location_country, type_specific_fields }
+- Response: { service_id, service_code }
+- Auth: Supplier Staff
+
+**PUT /api/supplier/services/{id}**
+- Description: Update service
+- Request: { name, description, base_price, type_specific_fields }
+- Response: { service }
+- Auth: Supplier Staff
+
+**PATCH /api/supplier/services/{id}/publish**
+- Description: Publish service to marketplace
+- Response: { service }
+- Auth: Supplier Staff
+
+### Purchase Orders
+
+**GET /api/purchase-orders**
+- Description: List purchase orders
+- Query: status, supplier_id, page, page_size
+- Response: { purchase_orders[], total }
+- Auth: Agency Staff
+
+**GET /api/purchase-orders/{id}**
+- Description: Get purchase order details
+- Response: { purchase_order, items[] }
+- Auth: Agency Staff, Supplier Staff
+
+**POST /api/purchase-orders**
+- Description: Create purchase order
+- Request: { supplier_id, items[], notes }
+- Response: { po_id, po_number }
+- Auth: Agency Staff
+
+**PATCH /api/purchase-orders/{id}/approve**
+- Description: Approve purchase order (Supplier)
+- Response: { purchase_order }
+- Auth: Supplier Staff
+
+**PATCH /api/purchase-orders/{id}/reject**
+- Description: Reject purchase order (Supplier)
+- Request: { rejection_reason }
+- Response: { purchase_order }
+- Auth: Supplier Staff
+
+### Packages
+
+**GET /api/packages**
+- Description: List packages
+- Query: package_type, status, page, page_size
+- Response: { packages[], total }
+- Auth: Agency Staff
+
+**GET /api/packages/{id}**
+- Description: Get package details
+- Response: { package, services[], itinerary }
+- Auth: Agency Staff
+
+**GET /api/packages/available-services**
+- Description: Get available services for package creation (from approved POs and marketplace)
+- Response: { supplier_services[], agency_services[] }
+- Auth: Agency Staff
+
+**POST /api/packages**
+- Description: Create package
+- Request: { package_type, name, description, duration_days, services[], markup_type, markup_value }
+- Response: { package_id, package_code }
+- Auth: Agency Staff
+
+**PUT /api/packages/{id}**
+- Description: Update package
+- Request: { name, description, services[], markup_type, markup_value }
+- Response: { package }
+- Auth: Agency Staff
+
+### Journeys
+
+**GET /api/journeys**
+- Description: List journeys
+- Query: package_id, status, departure_date_from, departure_date_to, page, page_size
+- Response: { journeys[], total }
+- Auth: Agency Staff
+
+**GET /api/journeys/{id}**
+- Description: Get journey details
+- Response: { journey, package, bookings[] }
+- Auth: Agency Staff
+
+**GET /api/journeys/{id}/services**
+- Description: Get journey services with tracking status
+- Response: { services[] }
+- Auth: Agency Staff
+
+**POST /api/journeys**
+- Description: Create journey
+- Request: { package_id, departure_date, return_date, total_quota, notes }
+- Response: { journey_id, journey_code }
+- Auth: Agency Staff
+
+**PATCH /api/journeys/{id}/services/{serviceId}/status**
+- Description: Update journey service tracking status
+- Request: { booking_status, execution_status, payment_status, issue_notes }
+- Response: { service }
+- Auth: Agency Staff
+
+### Bookings
+
+**GET /api/bookings**
+- Description: List bookings
+- Query: status, journey_id, customer_id, page, page_size
+- Response: { bookings[], total }
+- Auth: Agency Staff
+
+**GET /api/bookings/{id}**
+- Description: Get booking details
+- Response: { booking, travelers[], documents[], tasks[], payment_schedules[] }
+- Auth: Agency Staff
+
+**POST /api/bookings**
+- Description: Create booking
+- Request: { package_id, journey_id, customer_id, total_pax, booking_source, notes }
+- Response: { booking_id, booking_reference }
+- Auth: Agency Staff
+
+**PATCH /api/bookings/{id}/approve**
+- Description: Approve booking
+- Response: { booking }
+- Auth: Agency Staff
+
+**PATCH /api/bookings/{id}/cancel**
+- Description: Cancel booking
+- Request: { cancellation_reason }
+- Response: { booking }
+- Auth: Agency Staff
+
+### Documents
+
+**GET /api/bookings/{bookingId}/documents**
+- Description: Get booking documents
+- Response: { documents[] }
+- Auth: Agency Staff
+
+**PATCH /api/bookings/{bookingId}/documents/{id}/status**
+- Description: Update document status
+- Request: { status, document_number, expiry_date, rejection_reason }
+- Response: { document }
+- Auth: Agency Staff
+
+### B2B Marketplace
+
+**GET /api/marketplace/services**
+- Description: Browse marketplace services (excludes own agency)
+- Query: service_type, page, page_size
+- Response: { services[] }
+- Auth: Agency Staff
+
+**GET /api/agency-services**
+- Description: List own agency services
+- Query: is_published, page, page_size
+- Response: { services[] }
+- Auth: Agency Staff
+
+**POST /api/agency-services**
+- Description: Publish service to marketplace
+- Request: { po_id, service_type, name, description, cost_price, reseller_price, total_quota }
+- Response: { service_id }
+- Auth: Agency Staff
+
+**POST /api/agency-orders**
+- Description: Create order to another agency
+- Request: { agency_service_id, quantity, notes }
+- Response: { order_id, order_number }
+- Auth: Agency Staff
+
+**PATCH /api/agency-orders/{id}/approve**
+- Description: Approve agency order (Seller)
+- Response: { order }
+- Auth: Agency Staff
+
+**PATCH /api/agency-orders/{id}/reject**
+- Description: Reject agency order (Seller)
+- Request: { rejection_reason }
+- Response: { order }
+- Auth: Agency Staff
+
+
+---
+
+## API Response Format Standards
+
+**Validates: Requirement 46**
+
+This section defines the standardized response format for all API endpoints, ensuring consistency and following REST API best practices with snake_case naming convention.
+
+### JSON Naming Convention
+
+All API requests and responses MUST use **snake_case** naming convention for JSON properties:
+
+**Configuration in Program.cs:**
+```csharp
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+        options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.SnakeCaseLower;
+    });
+```
+
+**Example Transformation:**
+- C# Property: `UserId` → JSON Property: `user_id`
+- C# Property: `FullName` → JSON Property: `full_name`
+- C# Property: `CreatedAt` → JSON Property: `created_at`
+
+### Success Response Structure
+
+All successful API responses MUST follow this structure:
+
+```json
+{
+  "success": true,
+  "data": { ... },
+  "message": "Operation successful",
+  "timestamp": "2024-02-19T10:30:00Z"
+}
+```
+
+**Response Wrapper Class:**
+```csharp
+public class ApiResponse<T>
+{
+    public bool Success { get; set; } = true;
+    public T Data { get; set; }
+    public string Message { get; set; }
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+}
+```
+
+**Example - Login Success:**
+```json
+{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user_id": "0e465e23-5b4f-40bf-a0d8-3449d0598cef",
+    "email": "superadmin@dev.test",
+    "full_name": "Superadmin",
+    "user_type": "platform_admin",
+    "agency_id": null,
+    "supplier_id": null
+  },
+  "message": "Login successful",
+  "timestamp": "2024-02-19T10:30:00Z"
+}
+```
+
+**Example - Create Agency Success:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "agency_code": "AGN-240219-001",
+    "company_name": "Travel Agency ABC",
+    "email": "contact@travelabc.com",
+    "phone": "+62812345678",
+    "is_active": true,
+    "created_at": "2024-02-19T10:30:00Z"
+  },
+  "message": "Agency created successfully",
+  "timestamp": "2024-02-19T10:30:00Z"
+}
+```
+
+### Error Response Structure
+
+All error responses MUST follow this structure:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human-readable error message",
+    "details": []
+  },
+  "timestamp": "2024-02-19T10:30:00Z"
+}
+```
+
+**Error Response Class:**
+```csharp
+public class ApiErrorResponse
+{
+    public bool Success { get; set; } = false;
+    public ErrorDetails Error { get; set; }
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+}
+
+public class ErrorDetails
+{
+    public string Code { get; set; }
+    public string Message { get; set; }
+    public List<object> Details { get; set; } = new();
+}
+```
+
+### Error Codes
+
+**Standard Error Codes:**
+
+| HTTP Status | Error Code | Description |
+|------------|------------|-------------|
+| 400 | VALIDATION_ERROR | Request validation failed |
+| 401 | UNAUTHORIZED | Authentication required or token invalid |
+| 403 | FORBIDDEN | User lacks required permissions |
+| 404 | NOT_FOUND | Requested resource not found |
+| 409 | CONFLICT | Resource conflict (e.g., duplicate email) |
+| 422 | BUSINESS_RULE_VIOLATION | Business rule validation failed |
+| 500 | INTERNAL_SERVER_ERROR | Unexpected server error |
+
+**Example - Validation Error:**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "details": [
+      {
+        "field": "email",
+        "message": "Email is required"
+      },
+      {
+        "field": "company_name",
+        "message": "Company name must be at least 3 characters"
+      }
+    ]
+  },
+  "timestamp": "2024-02-19T10:30:00Z"
+}
+```
+
+**Example - Not Found Error:**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Agency with ID 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' not found",
+    "details": []
+  },
+  "timestamp": "2024-02-19T10:30:00Z"
+}
+```
+
+**Example - Unauthorized Error:**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Invalid or expired token",
+    "details": []
+  },
+  "timestamp": "2024-02-19T10:30:00Z"
+}
+```
+
+**Example - Forbidden Error:**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "You do not have permission to access this resource",
+    "details": []
+  },
+  "timestamp": "2024-02-19T10:30:00Z"
+}
+```
+
+**Example - Business Rule Violation:**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BUSINESS_RULE_VIOLATION",
+    "message": "Cannot approve booking: insufficient quota",
+    "details": [
+      {
+        "field": "available_quota",
+        "current_value": 5,
+        "required_value": 10
+      }
+    ]
+  },
+  "timestamp": "2024-02-19T10:30:00Z"
+}
+```
+
+### Paginated Response Structure
+
+For endpoints returning lists with pagination:
+
+```json
+{
+  "success": true,
+  "data": [...],
+  "pagination": {
+    "page": 1,
+    "page_size": 20,
+    "total_items": 100,
+    "total_pages": 5
+  },
+  "message": "Data retrieved successfully",
+  "timestamp": "2024-02-19T10:30:00Z"
+}
+```
+
+**Paginated Response Class:**
+```csharp
+public class PaginatedApiResponse<T>
+{
+    public bool Success { get; set; } = true;
+    public List<T> Data { get; set; }
+    public PaginationMetadata Pagination { get; set; }
+    public string Message { get; set; }
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+}
+
+public class PaginationMetadata
+{
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int TotalItems { get; set; }
+    public int TotalPages { get; set; }
+}
+```
+
+**Example - Paginated Agencies List:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "agency_code": "AGN-240219-001",
+      "company_name": "Travel Agency ABC",
+      "email": "contact@travelabc.com",
+      "is_active": true,
+      "created_at": "2024-02-19T10:30:00Z"
+    },
+    {
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "agency_code": "AGN-240219-002",
+      "company_name": "Travel Agency XYZ",
+      "email": "info@travelxyz.com",
+      "is_active": true,
+      "created_at": "2024-02-19T11:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "page_size": 20,
+    "total_items": 45,
+    "total_pages": 3
+  },
+  "message": "Agencies retrieved successfully",
+  "timestamp": "2024-02-19T12:00:00Z"
+}
+```
+
+### Implementation Guidelines
+
+**IMPORTANT: Automatic Response Wrapping**
+
+To ensure ALL controllers automatically return standardized responses without manual wrapping, we use **IAlwaysRunResultFilter** that intercepts and wraps all responses.
+
+**1. Create ApiResponseWrapperFilter:**
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+
+public class ApiResponseWrapperFilter : IAlwaysRunResultFilter
+{
+    public void OnResultExecuting(ResultExecutingContext context)
+    {
+        // Skip wrapping for non-API endpoints (e.g., Swagger, Health checks)
+        if (!context.HttpContext.Request.Path.StartsWithSegments("/api"))
+        {
+            return;
+        }
+
+        // Skip if already wrapped (to avoid double wrapping)
+        if (context.Result is ObjectResult objectResult && 
+            objectResult.Value?.GetType().Name.Contains("ApiResponse") == true)
+        {
+            return;
+        }
+
+        // Wrap OkObjectResult (200)
+        if (context.Result is OkObjectResult okResult)
+        {
+            var wrappedResponse = new ApiResponse<object>
+            {
+                Success = true,
+                Data = okResult.Value,
+                Message = "Operation successful",
+                Timestamp = DateTime.UtcNow
+            };
+            context.Result = new OkObjectResult(wrappedResponse);
+        }
+        // Wrap CreatedResult (201)
+        else if (context.Result is CreatedResult createdResult)
+        {
+            var wrappedResponse = new ApiResponse<object>
+            {
+                Success = true,
+                Data = createdResult.Value,
+                Message = "Resource created successfully",
+                Timestamp = DateTime.UtcNow
+            };
+            context.Result = new ObjectResult(wrappedResponse) { StatusCode = 201 };
+        }
+        // Wrap CreatedAtActionResult (201)
+        else if (context.Result is CreatedAtActionResult createdAtActionResult)
+        {
+            var wrappedResponse = new ApiResponse<object>
+            {
+                Success = true,
+                Data = createdAtActionResult.Value,
+                Message = "Resource created successfully",
+                Timestamp = DateTime.UtcNow
+            };
+            context.Result = new ObjectResult(wrappedResponse) { StatusCode = 201 };
+        }
+        // Wrap NoContentResult (204) - return success with null data
+        else if (context.Result is NoContentResult)
+        {
+            var wrappedResponse = new ApiResponse<object>
+            {
+                Success = true,
+                Data = null,
+                Message = "Operation successful",
+                Timestamp = DateTime.UtcNow
+            };
+            context.Result = new OkObjectResult(wrappedResponse);
+        }
+    }
+
+    public void OnResultExecuted(ResultExecutedContext context)
+    {
+        // No action needed after execution
+    }
+}
+```
+
+**2. Register Filter Globally in Program.cs:**
+
+```csharp
+builder.Services.AddControllers(options =>
+{
+    // Add global filter to wrap all API responses
+    options.Filters.Add<ApiResponseWrapperFilter>();
+})
+.AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+    options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.SnakeCaseLower;
+});
+```
+
+**3. Controller Usage (Simple & Clean):**
+
+```csharp
+[ApiController]
+[Route("api/admin/agencies")]
+public class AgencyController : ControllerBase
+{
+    private readonly IMediator _mediator;
+
+    public AgencyController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAgencies([FromQuery] GetAgenciesQuery query)
+    {
+        var result = await _mediator.Send(query);
+        
+        // Simple return - Filter will automatically wrap this
+        return Ok(new 
+        {
+            Agencies = result.Agencies,
+            Pagination = new 
+            {
+                Page = query.Page,
+                PageSize = query.PageSize,
+                TotalItems = result.TotalCount,
+                TotalPages = (int)Math.Ceiling(result.TotalCount / (double)query.PageSize)
+            }
+        });
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetAgencyById(Guid id)
+    {
+        var result = await _mediator.Send(new GetAgencyByIdQuery { Id = id });
+        
+        // Simple return - Filter will automatically wrap this
+        return Ok(result);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateAgency([FromBody] CreateAgencyCommand command)
+    {
+        var result = await _mediator.Send(command);
+        
+        // Simple return - Filter will automatically wrap this
+        return Created($"/api/admin/agencies/{result.Id}", result);
+    }
+
+    [HttpPatch("{id}/activate")]
+    public async Task<IActionResult> ActivateAgency(Guid id)
+    {
+        var result = await _mediator.Send(new ActivateAgencyCommand { Id = id });
+        
+        // Simple return - Filter will automatically wrap this
+        return Ok(result);
+    }
+}
+```
+
+**Result - All responses automatically wrapped:**
+
+```json
+// GET /api/admin/agencies
+{
+  "success": true,
+  "data": {
+    "agencies": [...],
+    "pagination": {
+      "page": 1,
+      "page_size": 20,
+      "total_items": 45,
+      "total_pages": 3
+    }
+  },
+  "message": "Operation successful",
+  "timestamp": "2024-02-19T12:00:00Z"
+}
+
+// POST /api/admin/agencies
+{
+  "success": true,
+  "data": {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "agency_code": "AGN-240219-001",
+    "company_name": "Travel Agency ABC",
+    ...
+  },
+  "message": "Resource created successfully",
+  "timestamp": "2024-02-19T10:30:00Z"
+}
+```
+
+**Benefits:**
+- ✅ **Zero manual wrapping** - Controllers just return `Ok(data)` or `Created(uri, data)`
+- ✅ **Consistent format** - All responses automatically follow the same structure
+- ✅ **Future-proof** - New controllers automatically get standardized responses
+- ✅ **Clean code** - No repetitive wrapping code in every action
+- ✅ **Maintainable** - Change format in one place (filter) affects all endpoints
+
+### Implementation Guidelines (Continued)
+
+**1. Controller Response Helpers (Optional - For Custom Messages):**
+
+Create extension methods for consistent response formatting:
+
+```csharp
+public static class ControllerExtensions
+{
+    public static IActionResult OkResponse<T>(this ControllerBase controller, T data, string message = "Operation successful")
+    {
+        var response = new ApiResponse<T>
+        {
+            Success = true,
+            Data = data,
+            Message = message,
+            Timestamp = DateTime.UtcNow
+        };
+        return controller.Ok(response);
+    }
+
+    public static IActionResult CreatedResponse<T>(this ControllerBase controller, T data, string message = "Resource created successfully")
+    {
+        var response = new ApiResponse<T>
+        {
+            Success = true,
+            Data = data,
+            Message = message,
+            Timestamp = DateTime.UtcNow
+        };
+        return controller.StatusCode(201, response);
+    }
+
+    public static IActionResult ErrorResponse(this ControllerBase controller, int statusCode, string errorCode, string message, List<object> details = null)
+    {
+        var response = new ApiErrorResponse
+        {
+            Success = false,
+            Error = new ErrorDetails
+            {
+                Code = errorCode,
+                Message = message,
+                Details = details ?? new List<object>()
+            },
+            Timestamp = DateTime.UtcNow
+        };
+        return controller.StatusCode(statusCode, response);
+    }
+
+    public static IActionResult PaginatedResponse<T>(this ControllerBase controller, List<T> data, int page, int pageSize, int totalItems, string message = "Data retrieved successfully")
+    {
+        var response = new PaginatedApiResponse<T>
+        {
+            Success = true,
+            Data = data,
+            Pagination = new PaginationMetadata
+            {
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalItems,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize)
+            },
+            Message = message,
+            Timestamp = DateTime.UtcNow
+        };
+        return controller.Ok(response);
+    }
+}
+```
+
+**2. Global Exception Handler Middleware:**
+
+```csharp
+public class GlobalExceptionHandlerMiddleware
+{
+    private readonly RequestDelegate _next;
+    private readonly ILogger<GlobalExceptionHandlerMiddleware> _logger;
+
+    public GlobalExceptionHandlerMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlerMiddleware> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        try
+        {
+            await _next(context);
+        }
+        catch (ValidationException ex)
+        {
+            await HandleValidationException(context, ex);
+        }
+        catch (NotFoundException ex)
+        {
+            await HandleNotFoundException(context, ex);
+        }
+        catch (UnauthorizedException ex)
+        {
+            await HandleUnauthorizedException(context, ex);
+        }
+        catch (ForbiddenException ex)
+        {
+            await HandleForbiddenException(context, ex);
+        }
+        catch (BusinessRuleViolationException ex)
+        {
+            await HandleBusinessRuleViolationException(context, ex);
+        }
+        catch (Exception ex)
+        {
+            await HandleGenericException(context, ex);
+        }
+    }
+
+    private async Task HandleValidationException(HttpContext context, ValidationException ex)
+    {
+        _logger.LogWarning(ex, "Validation error occurred");
+        
+        var response = new ApiErrorResponse
+        {
+            Success = false,
+            Error = new ErrorDetails
+            {
+                Code = "VALIDATION_ERROR",
+                Message = "Validation failed",
+                Details = ex.Errors.Select(e => new { field = e.PropertyName, message = e.ErrorMessage }).ToList<object>()
+            },
+            Timestamp = DateTime.UtcNow
+        };
+
+        context.Response.StatusCode = 400;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(response);
+    }
+
+    private async Task HandleNotFoundException(HttpContext context, NotFoundException ex)
+    {
+        _logger.LogWarning(ex, "Resource not found");
+        
+        var response = new ApiErrorResponse
+        {
+            Success = false,
+            Error = new ErrorDetails
+            {
+                Code = "NOT_FOUND",
+                Message = ex.Message,
+                Details = new List<object>()
+            },
+            Timestamp = DateTime.UtcNow
+        };
+
+        context.Response.StatusCode = 404;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(response);
+    }
+
+    private async Task HandleUnauthorizedException(HttpContext context, UnauthorizedException ex)
+    {
+        _logger.LogWarning(ex, "Unauthorized access attempt");
+        
+        var response = new ApiErrorResponse
+        {
+            Success = false,
+            Error = new ErrorDetails
+            {
+                Code = "UNAUTHORIZED",
+                Message = ex.Message,
+                Details = new List<object>()
+            },
+            Timestamp = DateTime.UtcNow
+        };
+
+        context.Response.StatusCode = 401;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(response);
+    }
+
+    private async Task HandleForbiddenException(HttpContext context, ForbiddenException ex)
+    {
+        _logger.LogWarning(ex, "Forbidden access attempt");
+        
+        var response = new ApiErrorResponse
+        {
+            Success = false,
+            Error = new ErrorDetails
+            {
+                Code = "FORBIDDEN",
+                Message = ex.Message,
+                Details = new List<object>()
+            },
+            Timestamp = DateTime.UtcNow
+        };
+
+        context.Response.StatusCode = 403;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(response);
+    }
+
+    private async Task HandleBusinessRuleViolationException(HttpContext context, BusinessRuleViolationException ex)
+    {
+        _logger.LogWarning(ex, "Business rule violation");
+        
+        var response = new ApiErrorResponse
+        {
+            Success = false,
+            Error = new ErrorDetails
+            {
+                Code = "BUSINESS_RULE_VIOLATION",
+                Message = ex.Message,
+                Details = ex.Details ?? new List<object>()
+            },
+            Timestamp = DateTime.UtcNow
+        };
+
+        context.Response.StatusCode = 422;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(response);
+    }
+
+    private async Task HandleGenericException(HttpContext context, Exception ex)
+    {
+        _logger.LogError(ex, "An unexpected error occurred");
+        
+        var response = new ApiErrorResponse
+        {
+            Success = false,
+            Error = new ErrorDetails
+            {
+                Code = "INTERNAL_SERVER_ERROR",
+                Message = "An unexpected error occurred. Please try again later.",
+                Details = new List<object>()
+            },
+            Timestamp = DateTime.UtcNow
+        };
+
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(response);
+    }
+}
+```
+
+**3. Register Middleware in Program.cs:**
+
+```csharp
+// Add JSON options for snake_case
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+        options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.SnakeCaseLower;
+    });
+
+// Register middleware
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+```
+
+**4. Example Controller Usage:**
+
+```csharp
+[ApiController]
+[Route("api/admin/agencies")]
+public class AgencyController : ControllerBase
+{
+    private readonly IMediator _mediator;
+
+    public AgencyController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAgencies([FromQuery] GetAgenciesQuery query)
+    {
+        var result = await _mediator.Send(query);
+        return this.PaginatedResponse(
+            result.Agencies,
+            query.Page,
+            query.PageSize,
+            result.TotalCount,
+            "Agencies retrieved successfully"
+        );
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetAgencyById(Guid id)
+    {
+        var result = await _mediator.Send(new GetAgencyByIdQuery { Id = id });
+        return this.OkResponse(result, "Agency retrieved successfully");
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateAgency([FromBody] CreateAgencyCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return this.CreatedResponse(result, "Agency created successfully");
+    }
+
+    [HttpPatch("{id}/activate")]
+    public async Task<IActionResult> ActivateAgency(Guid id)
+    {
+        var result = await _mediator.Send(new ActivateAgencyCommand { Id = id });
+        return this.OkResponse(result, "Agency activated successfully");
+    }
+}
+```
+
+### Benefits of Standardized Response Format
+
+1. **Consistency:** All endpoints follow the same response structure
+2. **Predictability:** Frontend developers know exactly what to expect
+3. **Error Handling:** Structured error responses make error handling easier
+4. **Debugging:** Timestamps help with debugging and logging
+5. **API Standards:** Follows REST API best practices with snake_case naming
+6. **Type Safety:** Frontend can create TypeScript interfaces matching the response structure
+7. **Pagination:** Consistent pagination metadata across all list endpoints
 
 
 ---
@@ -1790,3 +3132,31 @@ After Docker setup:
 5. Access Swagger: http://localhost:5000/swagger
 6. Access pgAdmin: http://localhost:5050
 7. Access Hangfire: http://localhost:5000/hangfire
+
+
+---
+
+## Self-Registration with KYC Verification
+
+**Note:** Complete design specifications for Self-Registration and KYC Verification features are documented in a separate file due to the extensive nature of this feature.
+
+**See:** [design-self-registration-kyc.md](./design-self-registration-kyc.md)
+
+This feature includes:
+- Agency and Supplier self-registration
+- MinIO file storage integration
+- Document upload and verification workflow
+- Platform admin verification interface
+- Access control based on verification status
+- Email notifications
+- Re-submission capability with attempt limits
+
+**Key Components:**
+- 2 modified tables (agencies, suppliers)
+- 2 new tables (document_requirements, entity_documents)
+- MinIO integration for document storage
+- 6 new commands + 3 new queries
+- 15+ new API endpoints
+- Verification status middleware
+- 7 correctness properties for testing
+
