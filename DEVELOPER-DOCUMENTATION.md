@@ -529,6 +529,7 @@ CREATE TABLE bookings (
     customer_id UUID NOT NULL REFERENCES customers(id),
     booking_reference VARCHAR(50) UNIQUE NOT NULL,
     booking_status VARCHAR(50) DEFAULT 'pending',
+    payment_type VARCHAR(50) DEFAULT 'installment', -- installment, full, flexible
     total_pax INTEGER NOT NULL,
     total_amount DECIMAL(15,2) NOT NULL,
     booking_source VARCHAR(50) DEFAULT 'staff', -- staff, phone, walk_in, whatsapp
@@ -547,6 +548,7 @@ CREATE INDEX idx_bookings_agency ON bookings(agency_id);
 CREATE INDEX idx_bookings_journey ON bookings(journey_id);
 CREATE INDEX idx_bookings_customer ON bookings(customer_id);
 CREATE INDEX idx_bookings_status ON bookings(booking_status);
+CREATE INDEX idx_bookings_payment_type ON bookings(payment_type);
 
 -- RLS Policy
 ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
@@ -747,7 +749,7 @@ CREATE TABLE payment_schedules (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
     installment_number INTEGER NOT NULL,
-    installment_name VARCHAR(100), -- "DP", "Installment 1", "Final Payment"
+    installment_name VARCHAR(100), -- "DP", "Installment 1", "Final Payment", "Full Payment", "Payment"
     due_date DATE NOT NULL,
     amount DECIMAL(15,2) NOT NULL,
     status VARCHAR(50) DEFAULT 'pending', -- pending, paid, overdue, partially_paid
@@ -763,6 +765,11 @@ CREATE INDEX idx_payment_schedules_booking ON payment_schedules(booking_id);
 CREATE INDEX idx_payment_schedules_status ON payment_schedules(status);
 CREATE INDEX idx_payment_schedules_due_date ON payment_schedules(due_date);
 CREATE UNIQUE INDEX idx_payment_schedules_booking_installment ON payment_schedules(booking_id, installment_number);
+
+-- Note: This table supports multiple payment types:
+-- 1. Installment: Multiple schedules (DP 40%, Installment 1 30%, Installment 2 30%)
+-- 2. Full Payment: Single schedule with full amount
+-- 3. Flexible Payment: Single schedule allowing multiple partial payments
 ```
 
 #### payment_transactions
@@ -772,7 +779,7 @@ CREATE TABLE payment_transactions (
     booking_id UUID NOT NULL REFERENCES bookings(id),
     schedule_id UUID REFERENCES payment_schedules(id),
     amount DECIMAL(15,2) NOT NULL,
-    payment_method VARCHAR(50) NOT NULL, -- bank_transfer, cash, credit_card, e_wallet
+    payment_method VARCHAR(50) NOT NULL, -- bank_transfer, cash, credit_card, e_wallet, other
     payment_date DATE NOT NULL,
     reference_number VARCHAR(100),
     notes TEXT,
@@ -783,6 +790,8 @@ CREATE TABLE payment_transactions (
 CREATE INDEX idx_payment_transactions_booking ON payment_transactions(booking_id);
 CREATE INDEX idx_payment_transactions_schedule ON payment_transactions(schedule_id);
 CREATE INDEX idx_payment_transactions_date ON payment_transactions(payment_date);
+
+-- Note: Multiple transactions can be linked to a single schedule (partial payments)
 ```
 
 ### Itinerary Tables
@@ -1562,13 +1571,32 @@ POST   /api/jobs/services/auto-unpublish
 5. Notification variables: {customer_name}, {package_name}, {departure_date}, etc.
 
 ### Payments
-1. Default schedule: DP (40%), Installment 1 (30%), Installment 2 (30%)
-2. DP due date: booking date + 3 days
-3. Installment 1 due date: departure date - 60 days
-4. Installment 2 due date: departure date - 30 days
-5. Payment status: Pending → Paid → Overdue
-6. Overdue = due date < today AND status = Pending
-7. Payment methods: Bank Transfer, Cash, Credit Card, E-wallet
+1. **Payment Types:** System supports three payment types:
+   - **Installment:** Multiple schedules (DP 40%, Installment 1 30%, Installment 2 30%)
+   - **Full Payment:** Single schedule with full amount, due 3 days after booking
+   - **Flexible Payment:** Single schedule allowing multiple partial payments until departure
+2. **Payment Type Selection:** Must be specified when creating booking
+3. **Installment Payment Rules:**
+   - DP due date: booking date + 3 days
+   - Installment 1 due date: departure date - 60 days
+   - Installment 2 due date: departure date - 30 days
+4. **Full Payment Rules:**
+   - Single schedule with installment_name = "Full Payment"
+   - Due date: booking date + 3 days
+   - Amount = booking total_amount
+5. **Flexible Payment Rules:**
+   - Single schedule with installment_name = "Payment"
+   - Due date: departure date - 7 days (configurable)
+   - Allows multiple partial payments
+6. **Payment Status Workflow:**
+   - Pending: No payment received (paid_amount = 0)
+   - Partially Paid: Some payment received (0 < paid_amount < amount)
+   - Paid: Fully paid (paid_amount = amount)
+   - Overdue: due_date < today AND status IN (Pending, Partially Paid)
+7. **Payment Methods:** bank_transfer, cash, credit_card, e_wallet, other
+8. **Multiple Payments:** A single schedule can have multiple payment transactions (partial payments)
+9. **Payment Validation:** Total paid_amount cannot exceed schedule amount
+10. **Outstanding Calculation:** outstanding = amount - paid_amount
 
 ### Itineraries
 1. One itinerary per package
