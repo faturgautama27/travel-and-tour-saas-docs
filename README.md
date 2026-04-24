@@ -1,243 +1,109 @@
-# Tour & Travel ERP SaaS - Documentation
+# Tour & Travel ERP SaaS — Documentation Hub
 
-Complete documentation untuk deployment dan CI/CD setup.
-
----
-
-## 📚 Documentation Index
-
-### 1. Infrastructure & Planning
-
-**[INFRASTRUCTURE-SPECS.md](./INFRASTRUCTURE-SPECS.md)**
-- Server specifications untuk production
-- Traffic estimation & capacity planning
-- Cost breakdown (DigitalOcean Singapore)
-- Monitoring & backup strategy
-
-### 2. Initial Deployment
-
-**[DEPLOYMENT-GUIDE.md](./DEPLOYMENT-GUIDE.md)**
-- Complete Docker-based deployment guide
-- Database setup & configuration
-- Nginx setup (with optional SSL)
-- Backup automation
-
-**[QUICK-REFERENCE.md](./QUICK-REFERENCE.md)**
-- Quick commands reference
-- Common troubleshooting steps
-
-### 3. Development Server Setup
-
-**[SETUP-DEV-SERVER.md](./SETUP-DEV-SERVER.md)** ⭐ START HERE
-- Complete step-by-step setup untuk dev server (31.97.220.52)
-- Git repository cloning (dev branch)
-- Docker setup
-- Initial deployment
-- SSH keys untuk GitHub Actions
-
-### 4. CI/CD - Development Branch
-
-**[CI-CD-BACKEND-DEV.md](./CI-CD-BACKEND-DEV.md)**
-- Auto-deployment untuk backend dev branch
-- GitHub Actions setup
-- Zero downtime deployment
-- Troubleshooting guide
-
-**[CI-CD-FRONTEND-DEV.md](./CI-CD-FRONTEND-DEV.md)**
-- Auto-deployment untuk frontend dev branch
-- GitHub Actions setup
-- Atomic swap deployment
-- Troubleshooting guide
-
-### 5. CI/CD - Production Branch (Future)
-
-**[CI-CD-BACKEND.md](./CI-CD-BACKEND.md)**
-- Template untuk production backend deployment
-- Blue-green deployment strategy
-
-**[CI-CD-FRONTEND.md](./CI-CD-FRONTEND.md)**
-- Template untuk production frontend deployment
-- Atomic swap strategy
-
-**[CI-CD-SETUP.md](./CI-CD-SETUP.md)**
-- Original combined CI/CD guide (reference)
-
-### 6. Deployment Scripts
-
-**[deployment-scripts/](./deployment-scripts/)**
-- `deploy-backend-dev.sh` - Backend dev deployment script
-- `deploy-frontend-dev.sh` - Frontend dev deployment script
-- `deploy-backend.sh` - Backend production template
-- `deploy-frontend.sh` - Frontend production template
-- `backend-workflow.yml` - GitHub Actions workflow template (backend)
-- `frontend-workflow.yml` - GitHub Actions workflow template (frontend)
+**Project**: Multi-Tenant Tour & Travel Agency ERP Platform  
+**Tech Stack**: .NET 8 · Angular 20 · PostgreSQL 16 · PrimeNG 20 · TailwindCSS 4  
+**Last Updated**: 24 April 2026
 
 ---
 
-## 🚀 Quick Start Guide
-
-### For Development Server (31.97.220.52)
-
-1. **Initial Setup**
-   - Follow: [SETUP-DEV-SERVER.md](./SETUP-DEV-SERVER.md)
-   - Time: 30-45 minutes
-   - Result: Server ready dengan backend & frontend running
-
-2. **Setup CI/CD for Backend**
-   - Follow: [CI-CD-BACKEND-DEV.md](./CI-CD-BACKEND-DEV.md)
-   - Time: 10-15 minutes
-   - Result: Auto-deploy saat push ke `dev` branch
-
-3. **Setup CI/CD for Frontend**
-   - Follow: [CI-CD-FRONTEND-DEV.md](./CI-CD-FRONTEND-DEV.md)
-   - Time: 10-15 minutes
-   - Result: Auto-deploy saat push ke `dev` branch
-
-### For Production Server (Future)
-
-1. **Initial Setup**
-   - Follow: [DEPLOYMENT-GUIDE.md](./DEPLOYMENT-GUIDE.md)
-   - Adapt untuk production server
-   - Use `main` branch instead of `dev`
-
-2. **Setup CI/CD**
-   - Follow: [CI-CD-BACKEND.md](./CI-CD-BACKEND.md)
-   - Follow: [CI-CD-FRONTEND.md](./CI-CD-FRONTEND.md)
-   - Use `main` branch
-
----
-
-## 🏗️ Architecture Overview
+## � Struktur Dokumentasi
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Development Server                    │
-│                     31.97.220.52                         │
-├─────────────────────────────────────────────────────────┤
-│                                                           │
-│  ┌─────────────┐  ┌──────────────┐  ┌───────────────┐  │
-│  │   Nginx     │  │   Backend    │  │  PostgreSQL   │  │
-│  │   (Port 80) │──│   (Port 5000)│──│  (Port 5432)  │  │
-│  │             │  │   .NET 8     │  │   v16         │  │
-│  └─────────────┘  └──────────────┘  └───────────────┘  │
-│         │                                                │
-│         └─── Serves: Frontend (Angular 20)              │
-│                                                           │
-└─────────────────────────────────────────────────────────┘
-                          │
-                          │ Auto-deploy via GitHub Actions
-                          │
-        ┌─────────────────┴─────────────────┐
-        │                                     │
-┌───────▼────────┐                  ┌────────▼───────┐
-│  Backend Repo  │                  │ Frontend Repo  │
-│  (dev branch)  │                  │  (dev branch)  │
-└────────────────┘                  └────────────────┘
+tour-and-travel-saas-docs/
+├── README.md                    ← Kamu di sini
+├── phase-1/                     Phase 1 MVP documentation
+│   ├── MAIN-DOCUMENTATION.md    Overview lengkap Phase 1
+│   ├── EXECUTIVE-SUMMARY.md     Business overview (non-technical)
+│   ├── DEVELOPER-DOCUMENTATION.md  Technical specs lengkap
+│   ├── TIMELINE.md              Week-by-week development plan
+│   └── business-flows/          Business flow & requirements
+│       ├── COMPLETE-JOURNEY-TO-BOOKING-FLOW.md
+│       ├── PAYMENT-COMMISSION-SUMMARY.md
+│       ├── PAYMENT-FLOW-DIAGRAM.md
+│       ├── PAYMENT-TRACKING-COMPREHENSIVE.md
+│       ├── SUPPLIER-SERVICE-MANAGEMENT-REQUIREMENTS.md
+│       ├── JOURNEY-REFACTOR-REQUIREMENTS.md
+│       └── COMPANY-SETTINGS-REQUIREMENTS.md
+├── deployment/                  Infrastructure & deployment
+│   ├── PRODUCTION_DEPLOYMENT_GUIDE.md
+│   ├── SSL_SETUP_GUIDE.md
+│   ├── MINIO-SETUP-GUIDE.md
+│   ├── MINIO-NGINX-SETUP.md
+│   └── MINIO-DIRECTORY-MIGRATION.md
+├── implementation-guide/        Step-by-step implementation guides
+│   ├── AI-AGENT-IMPLEMENTATION-PLAYBOOK.md
+│   ├── MASTER-IMPLEMENTATION-GUIDE.md
+│   ├── COMPLETE-IMPLEMENTATION-GUIDE-SUPPLIER-TO-BOOKING.md
+│   ├── COMPLETE-PHASES-GUIDE.md
+│   ├── JOURNEY-SYSTEM-PHASES-4-8.md
+│   ├── 00-SYSTEM-FLOW-DIAGRAMS.md
+│   ├── 01-SUPPLIER-SERVICE-MANAGEMENT.md
+│   └── DOCUMENTATION-INDEX.md
+├── scripts/                     Deployment & setup scripts
+│   ├── deploy-native-backend.sh
+│   ├── deploy-native-frontend.sh
+│   ├── setup-dev-server.sh
+│   ├── setup-native-server.sh
+│   ├── setup-postgresql-remote.sh
+│   └── setup-ssl-subdomain.sh
+└── .kiro/specs/                 Kiro spec files
+    ├── phase-2-erp-modules/     ← ACTIVE: Phase 2 spec
+    │   ├── requirements.md      9 modul, 25+ requirements
+    │   ├── design.md            Architecture, entities, properties
+    │   ├── tasks.md             27 tasks, ~100 sub-tasks
+    │   ├── PHASE_2_SUMMARY.md   Executive summary
+    │   └── TRELLO_TASKS.md      Ready to import ke Trello
+    ├── tour-travel-backend-phase1/
+    ├── tour-travel-frontend-phase1/
+    ├── json-based-mock-data/
+    └── asana-task-automation/
 ```
 
 ---
 
-## 📊 Deployment Flow
+## 🚀 Quick Navigation
 
-### Backend Deployment (Blue-Green)
+### Phase 2 (Current — April 2026)
+- [Phase 2 Summary](.kiro/specs/phase-2-erp-modules/PHASE_2_SUMMARY.md) — Executive summary 9 modul
+- [Phase 2 Requirements](.kiro/specs/phase-2-erp-modules/requirements.md) — Requirements lengkap
+- [Phase 2 Design](.kiro/specs/phase-2-erp-modules/design.md) — Technical design + correctness properties
+- [Phase 2 Tasks](.kiro/specs/phase-2-erp-modules/tasks.md) — Implementation plan
+- [Phase 2 Trello](.kiro/specs/phase-2-erp-modules/TRELLO_TASKS.md) — Trello import-ready
 
-```
-Push to dev → GitHub Actions → SSH to Server → Pull Code
-    → Backup DB → Build Docker → Start New Container (port 5001)
-    → Health Check → Gradual Traffic Shift (10% old, 90% new)
-    → Monitor 30s → Stop Old → Rename New → 100% New
-    → ✅ Complete (Zero Downtime)
-```
+### Phase 1 (Completed — May 2026)
+- [Main Documentation](phase-1/MAIN-DOCUMENTATION.md) — Overview lengkap
+- [Developer Docs](phase-1/DEVELOPER-DOCUMENTATION.md) — Technical specs
+- [Payment & Commission](phase-1/business-flows/PAYMENT-COMMISSION-SUMMARY.md) — Payment system design
 
-### Frontend Deployment (Atomic Swap)
-
-```
-Push to dev → GitHub Actions → SSH to Server → Pull Code
-    → npm ci → npm build → Backup Current → Atomic Swap
-    → Reload Nginx → Cleanup → ✅ Complete (Zero Downtime)
-```
-
----
-
-## 🔑 Key Information
-
-### Development Server
-- **IP:** 31.97.220.52
-- **User:** root
-- **Password:** SshJourva1@@
-- **Branch:** dev
-
-### Repositories
-- **Backend:** https://github.com/JourvaInternasionalProject/jourva-backend-erp-saas.git
-- **Frontend:** https://github.com/JourvaInternasionalProject/jourva-erp-frontend.git
-
-### Ports
-- **HTTP:** 80 (Nginx)
-- **Backend:** 5000 (internal)
-- **PostgreSQL:** 5432 (internal)
-
-### Directories
-- **Project Root:** `/opt/tourtravel`
-- **Backend:** `/opt/tourtravel/backend`
-- **Frontend:** `/opt/tourtravel/frontend`
-- **Scripts:** `/opt/tourtravel/scripts`
-- **Backups:** `/opt/tourtravel/backup`
-- **Logs:** `/var/log/tourtravel-*-deploy.log`
+### Deployment
+- [Production Deployment](deployment/PRODUCTION_DEPLOYMENT_GUIDE.md)
+- [SSL Setup](deployment/SSL_SETUP_GUIDE.md)
+- [MinIO Setup](deployment/MINIO-SETUP-GUIDE.md)
 
 ---
 
-## 🛠️ Common Commands
+## 🏗️ Architecture
 
-```bash
-# SSH to dev server
-ssh root@31.97.220.52
-
-# Check all containers
-docker ps
-
-# Check logs
-docker compose logs -f
-
-# Restart services
-docker compose restart
-
-# Check backend health
-curl http://31.97.220.52/health
-
-# Check frontend
-curl http://31.97.220.52/
-
-# View deployment logs
-tail -f /var/log/tourtravel-backend-dev-deploy.log
-tail -f /var/log/tourtravel-frontend-dev-deploy.log
+```
+┌──────────────────────────────────────────────────┐
+│                  Angular 20 SPA                   │
+│          PrimeNG 20 · TailwindCSS 4 · NgRx       │
+└──────────────────┬───────────────────────────────┘
+                   │ HTTPS
+┌──────────────────▼───────────────────────────────┐
+│              .NET 8 Web API                       │
+│     CQRS + MediatR · Clean Architecture           │
+│     JWT Auth · FluentValidation · Hangfire         │
+└──────┬──────────┬──────────┬──────────┬──────────┘
+       │          │          │          │
+  PostgreSQL   Xendit/    MinIO     Resend
+     16        DOKU      Storage    Email
 ```
 
 ---
 
-## 📞 Support & Troubleshooting
+## 📞 Repositories
 
-Each guide includes detailed troubleshooting sections:
-- SSH connection issues
-- Git pull failures
-- Docker build errors
-- Health check failures
-- Nginx reload issues
-
-Check the specific guide for detailed solutions.
-
----
-
-## 🎯 Next Steps
-
-1. ✅ Complete dev server setup
-2. ✅ Setup CI/CD for dev branch
-3. ⏳ Test auto-deployment
-4. ⏳ Setup production server (when ready)
-5. ⏳ Setup CI/CD for main branch
-6. ⏳ Configure domain & SSL
-
----
-
-**Last Updated:** February 14, 2026  
-**Status:** Development Server Ready  
-**Production:** Not yet configured
+- **Backend**: `travel-and-tour-backend/`
+- **Frontend**: `tour-and-travel-frontend/`
+- **Docs**: `tour-and-travel-saas-docs/` (this repo)
